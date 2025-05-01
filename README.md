@@ -7,7 +7,7 @@ Use `import('data:')` to execute arbitrary JavaScript strings. A simpler alterna
 - Multi-runtime: tested with Node (18+), Deno (limited), Chromium, Firefox, and WebKit.
 - Defers to `export` when used, otherwise implicitly `export` all globals (via `var`, `let`, `const`, `function`, `Array` or `Object` destructuring assignment, `import` specifiers, etc)
 - Emulates `import.meta.url` when `filePath` option is supplied
-- `addRequire` option adds `require()` (in Node)
+- `addRequire` option adds support for `require()` (in Node)
 - Extremely limited dependency footprint (`acorn` for JS parsing only)
 - Allows providing an external data object to pass in data (must be JSON.stringify friendly)
 
