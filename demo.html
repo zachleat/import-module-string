@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Eleventy in a Browser</title>
+		<script type="importmap">
+		{
+			"imports": {
+				"acorn": "https://unpkg.com/acorn@8.14.1/dist/acorn.mjs",
+				"acorn-walk": "https://unpkg.com/acorn-walk@8.3.4/dist/walk.mjs"
+			}
+		}
+	</script>
+	<!-- "@zachleat/noop": "https://unpkg.com/@zachleat/noop@1.0.4/index.js" -->
+		<script type="module">
+		import { importFromString } from "./import-module-string.js";
+		let res = await importFromString('import { noop } from "@zachleat/noop";')
+		console.log( {res} );
+		</script>
+	</head>
+	<body></body>
+</html>

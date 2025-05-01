@@ -1,0 +1,30 @@
+{
+  "name": "import-module-string",
+  "version": "1.0.0",
+  "description": "Use `import('data:')` to execute arbitrary JavaScript strings",
+  "main": "import-module-string.js",
+  "scripts": {
+    "test:browser": "vitest --config vitest.browser.config.js",
+    "test:node": "vitest --environment=node",
+    "test:deno": "echo '** Manual test for Deno is temporary until Vitest runs in Deno **\n' && deno test test/manual-deno-test.js",
+    "test": "CI=true npm run test:browser && CI=true npm run test:node",
+    "demo": "npx http-server ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@11ty/eleventy-utils": "^2.0.5",
+    "@vitest/browser": "^3.1.2",
+    "@zachleat/noop": "^1.0.4",
+    "esm-import-transformer": "^3.0.3",
+    "http-server": "^14.1.1",
+    "playwright": "^1.52.0",
+    "vitest": "^3.1.2"
+  },
+  "dependencies": {
+    "acorn": "^8.14.1",
+    "acorn-walk": "^8.3.4"
+  }
+}
