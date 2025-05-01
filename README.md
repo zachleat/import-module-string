@@ -1,6 +1,6 @@
 # `import-module-string`
 
-Use `import('data:')` to execute arbitrary JavaScript strings.
+Use `import('data:')` to execute arbitrary JavaScript strings. A simpler alternative to [`node-retrieve-globals`](https://github.com/zachleat/node-retrieve-globals/) that works in more runtimes.
 
 ## Features
 
