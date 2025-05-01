@@ -2,6 +2,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import { importFromString } from "../import-module-string.js";
 
+// TODO test import('npm:')
 Deno.test("Sample test", async() => {
 	let result = await importFromString(`export var a = 1;
 	export const c = 3;

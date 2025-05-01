@@ -7,6 +7,7 @@
     "test:browser": "vitest --config vitest.browser.config.js",
     "test:node": "vitest --environment=node",
     "test:deno": "echo '** Manual test for Deno is temporary until Vitest runs in Deno **\n' && deno test test/manual-deno-test.js",
+    "test:deno-cli": "deno test/manual-deno-test-cli.js",
     "test": "CI=true npm run test:browser && CI=true npm run test:node",
     "demo": "npx http-server ."
   },

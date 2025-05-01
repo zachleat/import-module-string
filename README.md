@@ -42,7 +42,7 @@ View the [test suite file](https://github.com/zachleat/import-module-string/blob
 ```js
 await importFromString(`export var a = 1;
 export const c = 3;
-export var b = 2;`);
+export let b = 2;`);
 
 // Returns
 { a: 1, c: 3, b: 2 }
@@ -55,7 +55,7 @@ import { importFromString } from "import-module-string";
 
 await importFromString(`var a = 1;
 const c = 3;
-var b = 2;`);
+let b = 2;`);
 
 // Returns
 { a: 1, c: 3, b: 2 }

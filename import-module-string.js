@@ -1,6 +1,10 @@
 import { parseCode } from "./src/parse-code.js";
 import { walkCode } from "./src/walk-code.js";
 import { stringifyData } from "./src/stringify-data.js";
+import { importFromBlob } from "./src/supports.js";
+
+// async but we await for it below (no top-level await for wider compat)
+const SUPPORTS_BLOB_IMPORT = importFromBlob();
 
 function getExportsCode(globals) {
 	// already makes use of `export` so we defer to this!
@@ -51,13 +55,12 @@ export async function importFromString(content, options = {}) {
 	let transformed = pre.join("\n") + content + (post.length > 0 ? `\n${post.join("\n")}` : "");
 	let target;
 
-	// Weak feature test for Node.js that isn’t tied to process.env (trying to avoid CLI access warnings in Deno)
-	if(typeof __dirname !== "undefined" && typeof __filename !== "undefined") {
-		// Node can’t do import(Blob) yet https://github.com/nodejs/node/issues/47573
-		target = `data:text/javascript;charset=utf-8,${encodeURIComponent(transformed)}`;
-	} else {
+	if(await SUPPORTS_BLOB_IMPORT) {
 		// Node 15.7+
 		target = new Blob([transformed], { type: "text/javascript" });
+	} else {
+		// Node can’t do import(Blob) yet https://github.com/nodejs/node/issues/47573
+		target = `data:text/javascript;charset=utf-8,${encodeURIComponent(transformed)}`;
 	}
 
 	// createObjectURL and revokeObjectURL are Node 16+
