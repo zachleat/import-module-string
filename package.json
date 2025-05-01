@@ -10,10 +10,17 @@
     "test": "CI=true npm run test:browser && CI=true npm run test:node",
     "demo": "npx http-server ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachleat/import-module-string.git"
+  },
+  "author": {
+    "name": "Zach Leatherman",
+    "email": "zachleatherman@gmail.com",
+    "url": "https://zachleat.com/"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@11ty/eleventy-utils": "^2.0.5",
     "@vitest/browser": "^3.1.2",
