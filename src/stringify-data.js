@@ -1,3 +1,4 @@
+// TODO add option to pass in your own serialization function
 // import serialize from "serialize-to-js";
 
 export function stringifyData(data = {}) {
