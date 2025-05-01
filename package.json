@@ -1,7 +1,7 @@
 {
   "name": "import-module-string",
   "version": "1.0.0",
-  "description": "Use `import('data:')` to execute arbitrary JavaScript strings",
+  "description": "Use import('data:') to execute arbitrary JavaScript strings",
   "main": "import-module-string.js",
   "scripts": {
     "test:browser": "vitest --config vitest.browser.config.js",
