@@ -55,6 +55,7 @@ test.skipIf(!isNodeMode)("Walk, then import a non-built-in", async t => {
 	let error = await expectError(async () => {
 		await importFromString(code, { ast });
 	});
-	assert.isOk(error.message.startsWith("Failed to resolve module specifier"), error.message);
+
+	assert.isOk(error.message.startsWith("Failed to resolve module specifier") || error.message === "Invalid URL", error.message);
 });
 

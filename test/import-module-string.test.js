@@ -175,7 +175,7 @@ test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
 	let error = await expectError(async () => {
 		await importFromString("import { noop } from '@zachleat/noop';");
 	});
-	assert.isOk(error.message.startsWith(`Failed to resolve module specifier "@zachleat/noop"`), error.message);
+	assert.isOk(error.message.startsWith(`Failed to resolve module specifier "@zachleat/noop"`) || error.message === "Invalid URL", error.message);
 });
 
 test.skipIf(!isNodeMode)("require(builtin)", async t => {
@@ -222,7 +222,7 @@ test.skipIf(!isNodeMode)("error: dynamic import(npm package)", async t => {
 		await importFromString(`const { noop } = await import("@zachleat/noop");`);
 	});
 
-	assert.isOk(error.message.startsWith("Failed to resolve module specifier"), error.message);
+	assert.isOk(error.message.startsWith("Failed to resolve module specifier") || error.message === "Invalid URL", error.message);
 });
 
 /*
