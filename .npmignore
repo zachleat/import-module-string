@@ -3,3 +3,4 @@ test/
 vitest.*
 deno.lock
 demo.html
+.github
