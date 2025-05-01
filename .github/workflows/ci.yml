@@ -16,8 +16,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
-          # cache: npm
+          cache: npm
       - run: npm install
+      - run: npx playwright install
       - run: npm test
 env:
   YARN_GPG: no
