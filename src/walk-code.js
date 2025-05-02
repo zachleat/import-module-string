@@ -37,7 +37,9 @@ export function walkCode(ast) {
 		// FunctionExpression is already handled by VariableDeclarator
 		// FunctionExpression(node) {},
 		FunctionDeclaration(node) {
-			globals.add(node.id.name);
+			if(node?.id?.name) {
+				globals.add(node.id.name);
+			}
 		},
 		VariableDeclarator(node) {
 			// destructuring assignment Array

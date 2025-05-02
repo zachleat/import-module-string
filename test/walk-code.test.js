@@ -13,6 +13,14 @@ import fs from "node:fs"`;
 	assert.deepEqual(imports, new Set(["@zachleat/noop", "node:fs"]));
 });
 
+test("export anonymous function", async t => {
+	let code = "export default function() {}";
+	let ast = parseCode(code);
+	let { imports } = walkCode(ast);
+	// imports ie empty
+	assert.deepEqual(imports, new Set());
+});
+
 test("Walk, then import", async t => {
 	let code = `import fs from 'node:fs';`;
 	let ast = parseCode(code);

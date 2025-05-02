@@ -137,6 +137,11 @@ test("import.meta.url (filePath override)", async t => {
 	assert.equal(res.b, import.meta.url);
 });
 
+test("export anonymous function", async t => {
+	let res = await importFromString("export default function() {}");
+	assert.typeOf(res.default, "function");
+});
+
 /*
  * Node-only tests
  */
