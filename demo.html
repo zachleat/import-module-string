@@ -7,15 +7,29 @@
 		{
 			"imports": {
 				"acorn": "https://unpkg.com/acorn@8.14.1/dist/acorn.mjs",
-				"acorn-walk": "https://unpkg.com/acorn-walk@8.3.4/dist/walk.mjs"
+				"acorn-walk": "https://unpkg.com/acorn-walk@8.3.4/dist/walk.mjs",
+				"esm-import-transformer": "https://unpkg.com/esm-import-transformer@3.0.3/import-transformer.js",
+				"@zachleat/noop": "https://unpkg.com/@zachleat/noop@1.0.4/index.js"
 			}
 		}
-	</script>
-	<!-- "@zachleat/noop": "https://unpkg.com/@zachleat/noop@1.0.4/index.js" -->
+		</script>
 		<script type="module">
-		import { importFromString } from "./import-module-string.js";
-		let res = await importFromString('import { noop } from "@zachleat/noop";')
-		console.log( {res} );
+		// https://unpkg.com/import-module-string@1.0.3/import-module-string.js
+
+		import { importFromString, getCode, getTarget, getModuleInfo } from "./import-module-string.js";
+		import { emulateImportMap, preprocessBrowser } from "./test/util-preprocess-browser.js";
+
+		console.log( "resolve" in import.meta );
+		console.log( getModuleInfo("acorn") );
+		console.log( getModuleInfo("./test/dependency.js") );
+
+		let res = await importFromString('import dep from "./test/dependency.js";', {
+			preprocess: preprocessBrowser,
+		});
+		console.log( res.dep, "should be 2" );
+
+		const { noop, noopSync } = await importFromString('import { noop, noopSync } from "@zachleat/noop";')
+		console.log( noop, noopSync );
 		</script>
 	</head>
 	<body></body>
