@@ -17,7 +17,7 @@
 		// https://unpkg.com/import-module-string@1.0.3/import-module-string.js
 
 		import { importFromString, getCode, getTarget, getModuleInfo } from "./import-module-string.js";
-		import { preprocessBrowser } from "./test/util-preprocess-browser.js";
+		import { preprocessBrowser, resolveImportContentBrowser } from "./test/util-preprocess-browser.js";
 
 		console.log( "resolve" in import.meta );
 		console.log( getModuleInfo("acorn") );
@@ -25,6 +25,7 @@
 
 		let res = await importFromString('import dep from "./test/dependency.js";', {
 			preprocess: preprocessBrowser,
+			resolveImportContent: resolveImportContentBrowser,
 		});
 		console.log( res.dep, "should be 2" );
 

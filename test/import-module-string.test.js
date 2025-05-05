@@ -2,9 +2,9 @@ import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 import { expectError } from "./test-utils.js";
-import { preprocessNode } from "./util-preprocess-node.js";
 import { emulateImportMap } from "./util-emulate-importmap.js";
-import { preprocessBrowser } from "./util-preprocess-browser.js";
+import { preprocessNode, resolveImportContentNode } from "./util-preprocess-node.js";
+import { preprocessBrowser, resolveImportContentBrowser } from "./util-preprocess-browser.js";
 import { importFromString } from "../import-module-string.js"
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;
@@ -146,6 +146,7 @@ test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url 
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
 		addRequire: true,
 		preprocess: preprocessNode,
+		resolveImportContent: resolveImportContentNode,
 		filePath: import.meta.url,
 	});
 
@@ -195,6 +196,7 @@ test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
 test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
 	let res = await importFromString("import { noop } from '@zachleat/noop';", {
 		preprocess: preprocessNode,
+		resolveImportContent: resolveImportContentNode,
 	});
 	assert.typeOf(res.noop, "number");
 });
@@ -281,6 +283,7 @@ test.skipIf(!isNodeMode)("error: import from local script", async t => {
 test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
 	let res = await importFromString("import dep from './test/dependency.js';", {
 		preprocess: preprocessNode,
+		resolveImportContent: resolveImportContentNode,
 	});
 
 	assert.typeOf(res.dep, "number");
@@ -289,6 +292,7 @@ test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
 test.skipIf(isNodeMode)("import from local script (inline)", async t => {
 	let res = await importFromString("import dep from './test/dependency.js';", {
 		preprocess: preprocessBrowser,
+		resolveImportContent: resolveImportContentBrowser,
 	});
 
 	assert.typeOf(res.dep, "number");

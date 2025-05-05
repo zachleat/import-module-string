@@ -31,16 +31,17 @@ export function resolveModule(ref) {
 }
 
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, addRequire, preprocess } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, addRequire, preprocess, resolveImportContent } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
 		addRequire: false, // add polyfill for `require()` (Node-only)
 
-		preprocess(code) {
-			return code;
-		},
+		// Hooks (async-friendly)
+		preprocess: undefined, // (code) { return code }
+		resolveImportContent: undefined, // (specifier) {},
 
+		// Internal
 		ast: undefined,
 		acornOptions: {}, // see defaults in walk-code.js
 	}, options);
@@ -49,9 +50,25 @@ export async function getCode(codeStr, options = {}) {
 
 	let { globals, features, imports } = walkCode(ast);
 
+	let resolved = Array.from(imports).map(u => getModuleInfo(u));
+
 	// Important: Node supports importing builtins here, this adds support for resolving non-builtins
+	if(typeof resolveImportContent === "function") {
+		for(let moduleInfo of resolved) {
+			let content = await resolveImportContent(moduleInfo);
+			if(content) {
+				let code = await getCode(content, {
+					filePath: moduleInfo.path,
+					preprocess,
+				});
+
+				// This needs to be `getTargetDataUri` in-browser even when it supports Blobs.
+				moduleInfo.target = await getTargetDataUri(code);
+			}
+		}
+	}
+
 	if(typeof preprocess === "function") {
-		let resolved = Array.from(imports).map(u => getModuleInfo(u));
 		let result = await preprocess(codeStr, { globals, features, imports, resolved });
 		if(typeof result === "string") {
 			codeStr = result;
