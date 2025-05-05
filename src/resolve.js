@@ -1,4 +1,3 @@
-import { fileURLToPath } from "./url.js";
 import { resolveModule } from "../import-module-string.js";
 
 function isValidUrl(ref) {
@@ -28,11 +27,7 @@ export function getModuleInfo(name) {
 	let info = { name };
 	try {
 		let u = resolveModule(name);
-		if(u.startsWith("file:///")) {
-			info.path = fileURLToPath(u);
-		} else {
-			info.path = u;
-		}
+		info.path = u;
 		info.mode = getModuleReferenceMode(u);
 	} catch(e) {
 		// unresolvable name
