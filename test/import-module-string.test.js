@@ -137,9 +137,42 @@ test("import.meta.url (filePath override)", async t => {
 	assert.equal(res.b, import.meta.url);
 });
 
+test.skipIf(!isNodeMode)("import.meta.url used in createRequire (with filePath)", async t => {
+	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
+		addRequire: true,
+		inlineRelativeReferences: true,
+		filePath: import.meta.url,
+	});
+
+	assert.typeOf(res.dep, "number");
+});
+
 test("export anonymous function", async t => {
 	let res = await importFromString("export default function() {}");
 	assert.typeOf(res.default, "function");
+});
+
+test.skipIf(!isNodeMode)("error: import from local script", async t => {
+	let error = await expectError(async () => {
+		await importFromString("import dep from './test/dependency.js';");
+	});
+
+	let messages = [
+		"Invalid URL",
+		`Failed to resolve module specifier "./test/dependency.js"`,
+		"Error resolving module specifier “./test/dependency.js”.",
+		"Module name, './test/dependency.js' does not resolve to a valid URL.",
+	];
+
+	assert.isOk(messages.find(msg => error.message.startsWith(msg)), error.message);
+});
+
+test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
+	let res = await importFromString("import dep from './test/dependency.js';", {
+		inlineRelativeReferences: true
+	});
+
+	assert.typeOf(res.dep, "number");
 });
 
 /*
@@ -181,6 +214,16 @@ test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
 		await importFromString("import { noop } from '@zachleat/noop';");
 	});
 	assert.isOk(error.message.startsWith(`Failed to resolve module specifier "@zachleat/noop"`) || error.message === "Invalid URL", error.message);
+});
+
+// This test *works* but is not supported in Vitest
+// https://github.com/vitest-dev/vitest/issues/6953
+// See test/manual-node-test.js
+test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
+	let res = await importFromString("import { noop } from '@zachleat/noop';", {
+		inlineRelativeReferences: true
+	});
+	assert.typeOf(res.noop, "number");
 });
 
 test.skipIf(!isNodeMode)("require(builtin)", async t => {

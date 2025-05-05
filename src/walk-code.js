@@ -10,23 +10,9 @@ export function walkCode(ast) {
 	};
 
 	let types = {
-		// START HERE?
-		// TODO add support for import.meta.url (or at least an escape hatch when you use it)
 		MetaProperty(node) {
+			// This script uses `import.meta.url`
 			features.importMetaUrl = true;
-
-			// // {
-			// // 	type: 'MetaProperty',
-			// // 	start: 10,
-			// // 	end: 21,
-			// // 	meta: Node { type: 'Identifier', start: 10, end: 16, name: 'import' },
-			// // 	property: Node { type: 'Identifier', start: 17, end: 21, name: 'meta' }
-			// // }
-
-			// node.type = "Identifier";
-			// delete node.meta;
-			// delete node.property;
-			// node.name = "import_meta_url";
 		},
 		CallExpression(node) {
 			if(node?.callee?.name === "require") {
