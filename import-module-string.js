@@ -20,7 +20,7 @@ export function resolveModule(ref) {
 		//   Firefox 106 vs 108
 
 		// Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953
-		throw new Error(`\`import.meta.resolve\` not supported: ${import.meta.resolve}`);
+		throw new Error(`\`import.meta.resolve\` is not available in this runtime!`);
 	}
 
 	// Notes about Node:
