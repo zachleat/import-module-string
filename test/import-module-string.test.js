@@ -1,18 +1,13 @@
 import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
-import { ImportTransformer } from "esm-import-transformer";
 
 import { expectError } from "./test-utils.js";
+import { preprocessNode } from "./util-preprocess-node.js";
+import { emulateImportMap, preprocessBrowser } from "./util-preprocess-browser.js";
 import { importFromString } from "../import-module-string.js"
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;
 const isVitestBrowserMode = Boolean(globalThis['__vitest_browser__']);
-
-function emulateImportMap(code, importMap) {
-	let tf = new ImportTransformer(code);
-	let transformedCode = tf.transformWithImportMap(importMap);
-	return transformedCode;
-}
 
 test("Using export", async () => {
 	let res = await importFromString(`export var a = 1;
@@ -124,6 +119,11 @@ test("JSON unfriendly data throws error", async t => {
 	assert.isOk(error.message.startsWith("Data passed to 'import-module-string' needs to be JSON.stringify friendly."), error.message);
 });
 
+test("export anonymous function", async t => {
+	let res = await importFromString("export default function() {}");
+	assert.typeOf(res.default, "function");
+});
+
 test("import.meta.url (no filePath)", async t => {
 	let res = await importFromString("const b = import.meta.url;");
 	assert.isTrue(res.b.startsWith("data:text/javascript;") || res.b.startsWith("blob:"));
@@ -137,47 +137,19 @@ test("import.meta.url (filePath override)", async t => {
 	assert.equal(res.b, import.meta.url);
 });
 
+/*
+ * Node-only tests
+ */
+
 test.skipIf(!isNodeMode)("import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
 		addRequire: true,
-		inlineRelativeReferences: true,
+		preprocess: preprocessNode,
 		filePath: import.meta.url,
 	});
 
 	assert.typeOf(res.dep, "number");
 });
-
-test("export anonymous function", async t => {
-	let res = await importFromString("export default function() {}");
-	assert.typeOf(res.default, "function");
-});
-
-test.skipIf(!isNodeMode)("error: import from local script", async t => {
-	let error = await expectError(async () => {
-		await importFromString("import dep from './test/dependency.js';");
-	});
-
-	let messages = [
-		"Invalid URL",
-		`Failed to resolve module specifier "./test/dependency.js"`,
-		"Error resolving module specifier “./test/dependency.js”.",
-		"Module name, './test/dependency.js' does not resolve to a valid URL.",
-	];
-
-	assert.isOk(messages.find(msg => error.message.startsWith(msg)), error.message);
-});
-
-test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
-	let res = await importFromString("import dep from './test/dependency.js';", {
-		inlineRelativeReferences: true
-	});
-
-	assert.typeOf(res.dep, "number");
-});
-
-/*
- * Node-only tests
- */
 
 test.skipIf(!isNodeMode)("import from node:fs (builtin)", async t => {
 	let res = await importFromString("import fs from 'node:fs'; export { fs };");
@@ -221,7 +193,7 @@ test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
 // See test/manual-node-test.js
 test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
 	let res = await importFromString("import { noop } from '@zachleat/noop';", {
-		inlineRelativeReferences: true
+		preprocess: preprocessNode,
 	});
 	assert.typeOf(res.noop, "number");
 });
@@ -285,4 +257,38 @@ test.skipIf(isNodeMode)("transform import target to remote package URL", async t
 		}
 	}));
 	assert.isOk(res.noop);
+});
+
+/*
+ * Combo tests need to be colocated
+ */
+test.skipIf(!isNodeMode)("error: import from local script", async t => {
+	let error = await expectError(async () => {
+		await importFromString("import dep from './test/dependency.js';");
+	});
+
+	let messages = [
+		"Invalid URL",
+		`Failed to resolve module specifier "./test/dependency.js"`,
+		"Error resolving module specifier “./test/dependency.js”.",
+		"Module name, './test/dependency.js' does not resolve to a valid URL.",
+	];
+
+	assert.isOk(messages.find(msg => error.message.startsWith(msg)), error.message);
+});
+
+test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
+	let res = await importFromString("import dep from './test/dependency.js';", {
+		preprocess: preprocessNode,
+	});
+
+	assert.typeOf(res.dep, "number");
+});
+
+test.skipIf(isNodeMode)("import from local script (inline)", async t => {
+	let res = await importFromString("import dep from './test/dependency.js';", {
+		preprocess: preprocessBrowser,
+	});
+
+	assert.typeOf(res.dep, "number");
 });

@@ -1,4 +1,5 @@
 import { fileURLToPath } from "./url.js";
+import { resolveModule } from "../import-module-string.js";
 
 function isValidUrl(ref) {
 	// Use URL.canParse some day
@@ -23,39 +24,7 @@ function getModuleReferenceMode(ref) {
 	return "bare";
 }
 
-function resolveModule(ref) {
-	// Supported in Node v20.6.0+, v18.19.0+, Chrome 105, Safari 16.4, Firefox 106
-	if(!("resolve" in import.meta)) {
-		// We *could* return Boolean when import.meta.resolve is not supported
-		// return true would mean that a browser with an Import Map *may* still resolve the module correctly.
-		// return false would mean that this module would be skipped
-
-		// Supports `import.meta.resolve` vs Import Maps
-		//   Chrome 105 vs 89
-		//   Safari 16.4 vs 16.4
-		//   Firefox 106 vs 108
-
-		// Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953
-		throw new Error(`\`import.meta.resolve\` not supported: ${import.meta.resolve}`);
-	}
-
-	// Notes about Node:
-	//   - `fs` resolves to `node:fs`
-	//   - `resolves` with all Node rules about node_modules
-	// Works with import maps when supported
-	return import.meta.resolve(ref);
-}
-
 export function getModuleInfo(name) {
-	let mode = getModuleReferenceMode(name);
-	if(mode && mode !== "bare") {
-		return {
-			name,
-			path: name,
-			mode,
-		};
-	}
-
 	let info = { name };
 	try {
 		let u = resolveModule(name);
@@ -67,6 +36,8 @@ export function getModuleInfo(name) {
 		info.mode = getModuleReferenceMode(u);
 	} catch(e) {
 		// unresolvable name
+		info.path = name;
+		info.mode = getModuleReferenceMode(name);
 	}
 
 	return info;

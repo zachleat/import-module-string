@@ -1,43 +1,33 @@
 import { parseCode } from "./src/parse-code.js";
 import { walkCode } from "./src/walk-code.js";
 import { stringifyData } from "./src/stringify-data.js";
-import { importFromBlob } from "./src/supports.js";
 import { getModuleInfo } from "./src/resolve.js";
+import { getTarget, getTargetDataUri } from "./src/url.js";
 
-// async but we await for it below (no top-level await for wider compat)
-const SUPPORTS_BLOB_IMPORT = importFromBlob();
+export { parseCode, walkCode, getTarget, getTargetDataUri, getModuleInfo };
 
-export { getModuleInfo };
+// Keep this function in root (not `src/resolve.js`) to maintain for-free root relative import.meta.url
+export function resolveModule(ref) {
+	// Supported in Node v20.6.0+, v18.19.0+, Chrome 105, Safari 16.4, Firefox 106
+	if(!("resolve" in import.meta)) {
+		// We *could* return Boolean when import.meta.resolve is not supported
+		// return true would mean that a browser with an Import Map *may* still resolve the module correctly.
+		// return false would mean that this module would be skipped
 
-export { parseCode, walkCode };
+		// Supports `import.meta.resolve` vs Import Maps
+		//   Chrome 105 vs 89
+		//   Safari 16.4 vs 16.4
+		//   Firefox 106 vs 108
 
-async function generateImportMap(importModuleInfo) {
-	const { default: fs } = await import("node:fs");
-
-	let importMap = {
-		imports: {}
-	};
-
-	// TODO Promise.all
-	for(let { name, path } of importModuleInfo) {
-		let content = fs.readFileSync(path, "utf8");
-		let code = await getCode(content, {
-			filePath: path,
-			inlineRelativeReferences: true,
-			// implicitExports: true,
-			// addRequire: false,
-		});
-		importMap.imports[name] = await getTarget(code)
+		// Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953
+		throw new Error(`\`import.meta.resolve\` not supported: ${import.meta.resolve}`);
 	}
 
-	return importMap;
-}
-
-// TODO memoize
-async function transformImports(codeStr, importMap) {
-	const { ImportTransformer } = await import("esm-import-transformer");
-	let tf = new ImportTransformer(codeStr);
-	return tf.transformWithImportMap(importMap);
+	// Notes about Node:
+	//   - `fs` resolves to `node:fs`
+	//   - `resolves` with all Node rules about node_modules
+	// Works with import maps when supported
+	return import.meta.resolve(ref);
 }
 
 function getExportsCode(globals) {
@@ -50,12 +40,15 @@ function getExportsCode(globals) {
 }
 
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, addRequire, inlineRelativeReferences } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, addRequire, preprocess } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
 		addRequire: false, // add polyfill for `require()` (Node-only)
-		inlineRelativeReferences: false, // read relative referenced scripts and inline (this is a bundler now)
+
+		preprocess(code) {
+			return code;
+		},
 
 		ast: undefined,
 		acornOptions: {}, // see defaults in walk-code.js
@@ -66,13 +59,11 @@ export async function getCode(codeStr, options = {}) {
 	let { globals, features, imports } = walkCode(ast);
 
 	// Important: Node supports importing builtins here, this adds support for resolving non-builtins
-	if(inlineRelativeReferences) {
-		let importModuleInfo = Array.from(imports).map(u => getModuleInfo(u));
-
-		// Has imports that can be mapped to the file system
-		if(importModuleInfo.filter(i => i.mode === "fs").length > 0) {
-			let importMap = await generateImportMap(importModuleInfo);
-			codeStr = await transformImports(codeStr, importMap);
+	if(typeof preprocess === "function") {
+		let resolved = Array.from(imports).map(u => getModuleInfo(u));
+		let result = await preprocess(codeStr, { globals, features, imports, resolved });
+		if(typeof result === "string") {
+			codeStr = result;
 		}
 	}
 
@@ -98,18 +89,7 @@ export async function getCode(codeStr, options = {}) {
 
 	let transformedCode = pre.join("\n") + codeStr + (post.length > 0 ? `\n${post.join("\n")}` : "");
 	return transformedCode;
-
 };
-
-export async function getTarget(codeStr) {
-	if(await SUPPORTS_BLOB_IMPORT) {
-		// Node 15.7+
-		return new Blob([codeStr], { type: "text/javascript" });
-	}
-
-	// Node can’t do import(Blob) yet https://github.com/nodejs/node/issues/47573
-	return `data:text/javascript;charset=utf-8,${encodeURIComponent(codeStr)}`;
-}
 
 // Thanks https://stackoverflow.com/questions/57121467/import-a-module-from-string-variable
 export async function importFromString(codeStr, options = {}) {
@@ -135,6 +115,3 @@ export async function importFromString(codeStr, options = {}) {
 	// Promise
 	return import(/* @vite-ignore */target);
 }
-
-// TODO add import from file
-// export async function importFromFile(filePath, options = {}) {}
