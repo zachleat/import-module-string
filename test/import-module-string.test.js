@@ -141,7 +141,7 @@ test("import.meta.url (filePath override)", async t => {
  * Node-only tests
  */
 
-test.skipIf(!isNodeMode)("import.meta.url used in createRequire (with filePath)", async t => {
+test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
 		addRequire: true,
 		preprocess: preprocessNode,
