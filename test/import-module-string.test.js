@@ -3,7 +3,8 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 
 import { expectError } from "./test-utils.js";
 import { preprocessNode } from "./util-preprocess-node.js";
-import { emulateImportMap, preprocessBrowser } from "./util-preprocess-browser.js";
+import { emulateImportMap } from "./util-emulate-importmap.js";
+import { preprocessBrowser } from "./util-preprocess-browser.js";
 import { importFromString } from "../import-module-string.js"
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;

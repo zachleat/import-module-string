@@ -1,4 +1,4 @@
-import { ImportTransformer } from "esm-import-transformer";
+import { emulateImportMap } from "./util-emulate-importmap.js";
 import { getCode, getTargetDataUri } from "../import-module-string.js"
 
 // in-browser `emulateImportMap` could be a dynamically inserted Import Map (though not yet supported in Firefox)
@@ -36,10 +36,4 @@ export async function preprocessBrowser(codeStr, { preprocess, imports, resolved
 	if(Object.keys(importMap?.imports || {}).length > 0) {
 		return emulateImportMap(codeStr, importMap);
 	}
-}
-
-export function emulateImportMap(code, importMap) {
-	let tf = new ImportTransformer(code);
-	let transformedCode = tf.transformWithImportMap(importMap);
-	return transformedCode;
 }

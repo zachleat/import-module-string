@@ -1,7 +1,7 @@
 
 import fs from "node:fs";
 // import { fileURLToPath } from "node:url";
-import { ImportTransformer } from "esm-import-transformer";
+import { emulateImportMap } from "./util-emulate-importmap.js";
 
 import { getCode, getTarget } from "../import-module-string.js"
 
@@ -37,10 +37,4 @@ export async function preprocessNode(codeStr, { preprocess, imports, resolved })
 	if(Object.keys(importMap?.imports || {}).length > 0) {
 		return emulateImportMap(codeStr, importMap);
 	}
-}
-
-function emulateImportMap(code, importMap) {
-	let tf = new ImportTransformer(code);
-	let transformedCode = tf.transformWithImportMap(importMap);
-	return transformedCode;
 }
