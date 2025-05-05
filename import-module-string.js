@@ -30,15 +30,6 @@ export function resolveModule(ref) {
 	return import.meta.resolve(ref);
 }
 
-function getExportsCode(globals) {
-	// already makes use of `export` so we defer to this!
-	if(!globals || globals.size === 0) {
-		return "";
-	}
-
-	return `export { ${Array.from(globals).join(", ")} }`;
-}
-
 export async function getCode(codeStr, options = {}) {
 	let { ast, acornOptions, data, filePath, implicitExports, addRequire, preprocess } = Object.assign({
 		data: {},
@@ -83,8 +74,8 @@ export async function getCode(codeStr, options = {}) {
 	}
 
 	// don’t add `export { ...globals }` if the code is *already* using `export`
-	if(implicitExports && !features.export) {
-		post.push(getExportsCode(globals));
+	if(implicitExports && !features.export && globals.size > 0) {
+		post.push(`export { ${Array.from(globals).join(", ")} }`);
 	}
 
 	let transformedCode = pre.join("\n") + codeStr + (post.length > 0 ? `\n${post.join("\n")}` : "");
