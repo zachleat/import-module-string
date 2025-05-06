@@ -30,16 +30,32 @@ export function resolveModule(ref) {
 	return import.meta.resolve(ref);
 }
 
+function getAdapter(ref) {
+	const ADAPTER_MAP = {
+		"fs": "./src/adapter-fs.js",
+		"fetch": "./src/adapter-fetch.js",
+	};
+
+	// Supported adapter functions (async-friendly)
+	// resolveImportContent: (specifier) { return code },
+	// preprocess: (code) { return code }
+
+	if(ADAPTER_MAP[ref]) {
+		return import(/* @vite-ignore */ADAPTER_MAP[ref]);
+	}
+	if(ref?.resolveImportContent || ref?.preprocess) {
+		return ref;
+	}
+}
+
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, addRequire, preprocess, resolveImportContent } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, adapter, addRequire } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
-		addRequire: false, // add polyfill for `require()` (Node-only)
 
-		// Hooks (async-friendly)
-		preprocess: undefined, // (code) { return code }
-		resolveImportContent: undefined, // (specifier) {},
+		adapter: undefined,
+		addRequire: false, // add polyfill for `require()` (Node-only)
 
 		// Internal
 		ast: undefined,
@@ -52,27 +68,33 @@ export async function getCode(codeStr, options = {}) {
 
 	let resolved = Array.from(imports).map(u => getModuleInfo(u, filePath));
 
-	// Important: Node supports importing builtins here, this adds support for resolving non-builtins
-	if(typeof resolveImportContent === "function") {
-		for(let moduleInfo of resolved) {
-			let content = await resolveImportContent(moduleInfo);
-			if(content) {
-				let code = await getCode(content, {
-					filePath: moduleInfo.path,
-					preprocess,
-					resolveImportContent,
-				});
+	if(adapter) {
+		let adapterImplementation = await getAdapter(adapter);
+		if(adapterImplementation) {
+			let { resolveImportContent, preprocess } = adapterImplementation;
 
-				// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
-				moduleInfo.target = await getTargetDataUri(code);
+			// Important: Node supports importing builtins here, this adds support for resolving non-builtins
+			if(typeof resolveImportContent === "function") {
+				for(let moduleInfo of resolved) {
+					let content = await resolveImportContent(moduleInfo);
+					if(content) {
+						let code = await getCode(content, {
+							filePath: moduleInfo.path,
+							adapter,
+						});
+
+						// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
+						moduleInfo.target = await getTargetDataUri(code);
+					}
+				}
 			}
-		}
-	}
 
-	if(typeof preprocess === "function") {
-		let result = await preprocess(codeStr, { globals, features, imports, resolved });
-		if(typeof result === "string") {
-			codeStr = result;
+			if(typeof preprocess === "function") {
+				let result = await preprocess(codeStr, { globals, features, imports, resolved });
+				if(typeof result === "string") {
+					codeStr = result;
+				}
+			}
 		}
 	}
 

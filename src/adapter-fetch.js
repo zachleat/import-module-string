@@ -1,6 +1,17 @@
-import { emulateImportMap } from "./emulate-importmap.js";
+import { ImportTransformer } from "esm-import-transformer";
 
-export async function resolveImportContentBrowser(moduleInfo = {}) {
+// in-browser `emulateImportMap` *could* be a dynamically inserted
+// Import Map some day (though not yet supported in Firefox):
+// https://github.com/mdn/mdn/issues/672
+
+function emulateImportMap(code, importMap) {
+	// TODO re-use ast?
+	let tf = new ImportTransformer(code);
+	let transformedCode = tf.transformWithImportMap(importMap);
+	return transformedCode;
+}
+
+export async function resolveImportContent(moduleInfo = {}) {
 	let {mode, path} = moduleInfo;
 	if(mode !== "url") {
 		return;
@@ -11,7 +22,7 @@ export async function resolveImportContentBrowser(moduleInfo = {}) {
 	return content;
 }
 
-export async function preprocessBrowser(codeStr, { resolved }) {
+export async function preprocess(codeStr, { resolved }) {
 	let importMap = {
 		imports: {}
 	};

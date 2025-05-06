@@ -17,15 +17,13 @@
 		// https://unpkg.com/import-module-string@1.0.3/import-module-string.js
 
 		import { importFromString, getCode, getTarget, getModuleInfo } from "./import-module-string.js";
-		import { preprocessBrowser, resolveImportContentBrowser } from "./test/util-fetch-adapter.js";
 
 		console.log( "resolve" in import.meta );
 		console.log( getModuleInfo("acorn") );
 		console.log( getModuleInfo("./test/dependency.js") );
 
 		let res = await importFromString('import dep from "./test/dependency.js";', {
-			preprocess: preprocessBrowser,
-			resolveImportContent: resolveImportContentBrowser,
+			adapter: "fetch",
 		});
 		console.log( res.dep, "should be 2" );
 

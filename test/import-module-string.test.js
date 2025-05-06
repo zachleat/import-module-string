@@ -2,9 +2,7 @@ import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 import { expectError } from "./test-utils.js";
-import { emulateImportMap } from "../src/emulate-importmap.js";
-import { preprocessNode, resolveImportContentNode } from "../src/adapter-fs.js";
-import { preprocessBrowser, resolveImportContentBrowser } from "../src/adapter-fetch.js";
+// import { emulateImportMap } from "../src/emulate-importmap.js";
 import { importFromString } from "../import-module-string.js"
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;
@@ -144,9 +142,8 @@ test("import.meta.url (filePath override)", async t => {
 
 test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
+		adapter: "fs",
 		addRequire: true,
-		preprocess: preprocessNode,
-		resolveImportContent: resolveImportContentNode,
 		filePath: import.meta.url,
 	});
 
@@ -237,23 +234,6 @@ test.skipIf(!isNodeMode)("error: dynamic import(npm package)", async t => {
 	assert.isOk(error.message.startsWith("Failed to resolve module specifier") || error.message === "Invalid URL", error.message);
 });
 
-/*
- * Browser-only tests
- */
-
-// Works in Browser with an Import Map!
-test.skipIf(isNodeMode)("transform import target to remote package URL", async t => {
-	let res = await importFromString(emulateImportMap("import { noop } from '@zachleat/noop';", {
-		imports: {
-			"@zachleat/noop": "https://unpkg.com/@zachleat/noop"
-		}
-	}));
-	assert.isOk(res.noop);
-});
-
-/*
- * Combo tests need to be colocated
- */
 test.skipIf(!isNodeMode)("error: import from local script", async t => {
 	let error = await expectError(async () => {
 		await importFromString("import dep from './test/dependency.js';");
@@ -269,37 +249,21 @@ test.skipIf(!isNodeMode)("error: import from local script", async t => {
 	assert.isOk(messages.find(msg => error.message.startsWith(msg)), error.message);
 });
 
-test.skipIf(!isNodeMode)("import from local script (inline)", async t => {
+/*
+ * Combo Node and Browser tests need to be colocated
+ */
+
+test("import from local script (inline)", async t => {
 	let res = await importFromString("import dep from './test/dependency.js';", {
-		preprocess: preprocessNode,
-		resolveImportContent: resolveImportContentNode,
+		adapter: isNodeMode ? "fs" : "fetch",
 	});
 
 	assert.typeOf(res.dep, "number");
 });
 
-test.skipIf(isNodeMode)("import from local script (inline)", async t => {
-	let res = await importFromString("import dep from './test/dependency.js';", {
-		preprocess: preprocessBrowser,
-		resolveImportContent: resolveImportContentBrowser,
-	});
-
-	assert.typeOf(res.dep, "number");
-});
-
-test.skipIf(!isNodeMode)("import from local script (inline) with import local script", async t => {
+test("import from local script (inline) with import local script", async t => {
 	let res = await importFromString("import {num} from './test/dependency-with-import.js';", {
-		preprocess: preprocessNode,
-		resolveImportContent: resolveImportContentNode,
-	});
-
-	assert.equal(res.num, 2);
-});
-
-test.skipIf(isNodeMode)("import from local script (inline) with import local script", async t => {
-	let res = await importFromString("import {num} from './test/dependency-with-import.js';", {
-		preprocess: preprocessBrowser,
-		resolveImportContent: resolveImportContentBrowser,
+		adapter: isNodeMode ? "fs" : "fetch",
 	});
 
 	assert.equal(res.num, 2);
@@ -309,8 +273,7 @@ test.skipIf(isNodeMode)("import from local script (inline) with import local scr
 // We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
 test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
 	let res = await importFromString("import { noop } from '@zachleat/noop';", {
-		preprocess: preprocessNode,
-		resolveImportContent: resolveImportContentNode,
+		adapter: isNodeMode ? "fs" : "fetch",
 	});
 	assert.typeOf(res.noop, "number");
 });
