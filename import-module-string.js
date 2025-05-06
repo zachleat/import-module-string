@@ -3,6 +3,7 @@ import { walkCode } from "./src/walk-code.js";
 import { stringifyData } from "./src/stringify-data.js";
 import { getModuleInfo } from "./src/resolve.js";
 import { getTarget, getTargetDataUri } from "./src/url.js";
+import * as fetchAdapter from "./adapter/fetch.js";
 
 export { parseCode, walkCode, getTarget, getTargetDataUri, getModuleInfo };
 
@@ -20,7 +21,7 @@ export function resolveModule(ref) {
 		//   Firefox 106 vs 108
 
 		// Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953
-		throw new Error(`\`import.meta.resolve\` is not available in this runtime!`);
+		throw new Error(`\`import.meta.resolve\` is not available.`);
 	}
 
 	// Notes about Node:
@@ -31,9 +32,12 @@ export function resolveModule(ref) {
 }
 
 function getAdapter(ref) {
+	if(ref === "fetch") {
+		return fetchAdapter;
+	}
+
 	const ADAPTER_MAP = {
-		"fs": "./src/adapter-fs.js",
-		"fetch": "./src/adapter-fetch.js",
+		"fs": "./adapter/fs.js",
 	};
 
 	// Supported adapter functions (async-friendly)
@@ -43,6 +47,7 @@ function getAdapter(ref) {
 	if(ADAPTER_MAP[ref]) {
 		return import(/* @vite-ignore */ADAPTER_MAP[ref]);
 	}
+
 	if(ref?.resolveImportContent || ref?.preprocess) {
 		return ref;
 	}
