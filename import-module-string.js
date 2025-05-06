@@ -63,7 +63,7 @@ export async function getCode(codeStr, options = {}) {
 					resolveImportContent,
 				});
 
-				// This needs to be `getTargetDataUri` in-browser even when it supports Blobs.
+				// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
 				moduleInfo.target = await getTargetDataUri(code);
 			}
 		}

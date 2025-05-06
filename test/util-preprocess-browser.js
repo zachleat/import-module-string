@@ -1,7 +1,7 @@
 import { emulateImportMap } from "./util-emulate-importmap.js";
 
 export async function resolveImportContentBrowser(moduleInfo = {}) {
-	let {mode, path } = moduleInfo;
+	let {mode, path} = moduleInfo;
 	if(mode !== "url") {
 		return;
 	}
