@@ -6,7 +6,7 @@ import { ImportTransformer } from "esm-import-transformer";
 // import { fileURLToPath } from "node:url";
 
 // The `adapters` pattern helps avoid a Vite error (and is also used to polyfill fileURLToPath in bundler)
-import { fileURLToPath } from "../src/adapters/url.js";
+import { fileURLToPath } from "./adapters/url.js";
 
 function emulateImportMap(code, importMap) {
 	// TODO re-use ast?

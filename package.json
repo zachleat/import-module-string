@@ -3,11 +3,6 @@
   "version": "1.0.4",
   "description": "Use import('data:') and import(Blob) to execute arbitrary JavaScript strings",
   "main": "import-module-string.js",
-  "exports": {
-    ".": "./import-module-string.js",
-    "./adapter/fs.js": "./adapter/fs.js",
-    "./adapter/fetch.js": "./adapter/fetch.js"
-  },
   "scripts": {
     "test:browser": "vitest --config vitest.browser.config.js",
     "test:node-manual": "node --test test/manual-node-test.js",

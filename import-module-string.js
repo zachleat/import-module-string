@@ -3,7 +3,6 @@ import { walkCode } from "./src/walk-code.js";
 import { stringifyData } from "./src/stringify-data.js";
 import { getModuleInfo } from "./src/resolve.js";
 import { getTarget, getTargetDataUri } from "./src/url.js";
-import * as fetchAdapter from "./adapter/fetch.js";
 
 export { parseCode, walkCode, getTarget, getTargetDataUri, getModuleInfo };
 
@@ -33,20 +32,16 @@ export function resolveModule(ref) {
 
 function getAdapter(ref) {
 	if(ref === "fetch") {
-		return fetchAdapter;
+		// dynamic import not necessary here but we use it for consistency
+		return import("./src/adapter-fetch.js");
+	} else if(ref === "fs") {
+		// dynamic import here to avoid Vite bundler with `fs` on client errors
+		return import("./src/adapter-fs.js");
 	}
-
-	const ADAPTER_MAP = {
-		"fs": "./adapter/fs.js",
-	};
 
 	// Supported adapter functions (async-friendly)
 	// resolveImportContent: (specifier) { return code },
 	// preprocess: (code) { return code }
-
-	if(ADAPTER_MAP[ref]) {
-		return import(/* @vite-ignore */ADAPTER_MAP[ref]);
-	}
 
 	if(ref?.resolveImportContent || ref?.preprocess) {
 		return ref;
