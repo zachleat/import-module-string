@@ -50,7 +50,7 @@ export async function getCode(codeStr, options = {}) {
 
 	let { globals, features, imports } = walkCode(ast);
 
-	let resolved = Array.from(imports).map(u => getModuleInfo(u));
+	let resolved = Array.from(imports).map(u => getModuleInfo(u, filePath));
 
 	// Important: Node supports importing builtins here, this adds support for resolving non-builtins
 	if(typeof resolveImportContent === "function") {
@@ -60,6 +60,7 @@ export async function getCode(codeStr, options = {}) {
 				let code = await getCode(content, {
 					filePath: moduleInfo.path,
 					preprocess,
+					resolveImportContent,
 				});
 
 				// This needs to be `getTargetDataUri` in-browser even when it supports Blobs.

@@ -190,17 +190,6 @@ test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
 	assert.isOk(error.message.startsWith(`Failed to resolve module specifier "@zachleat/noop"`) || error.message === "Invalid URL", error.message);
 });
 
-// This test *works* but is not supported in Vitest
-// https://github.com/vitest-dev/vitest/issues/6953
-// See test/manual-node-test.js
-test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
-	let res = await importFromString("import { noop } from '@zachleat/noop';", {
-		preprocess: preprocessNode,
-		resolveImportContent: resolveImportContentNode,
-	});
-	assert.typeOf(res.noop, "number");
-});
-
 test.skipIf(!isNodeMode)("require(builtin)", async t => {
 	let res = await importFromString("const fs = require('node:fs'); export { fs };", {
 		addRequire: true
@@ -296,4 +285,32 @@ test.skipIf(isNodeMode)("import from local script (inline)", async t => {
 	});
 
 	assert.typeOf(res.dep, "number");
+});
+
+test.skipIf(!isNodeMode)("import from local script (inline) with import local script", async t => {
+	let res = await importFromString("import {num} from './test/dependency-with-import.js';", {
+		preprocess: preprocessNode,
+		resolveImportContent: resolveImportContentNode,
+	});
+
+	assert.equal(res.num, 2);
+});
+
+test.skipIf(isNodeMode)("import from local script (inline) with import local script", async t => {
+	let res = await importFromString("import {num} from './test/dependency-with-import.js';", {
+		preprocess: preprocessBrowser,
+		resolveImportContent: resolveImportContentBrowser,
+	});
+
+	assert.equal(res.num, 2);
+});
+
+// Tests that import from npm packages *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
+// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
+test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
+	let res = await importFromString("import { noop } from '@zachleat/noop';", {
+		preprocess: preprocessNode,
+		resolveImportContent: resolveImportContentNode,
+	});
+	assert.typeOf(res.noop, "number");
 });

@@ -10,8 +10,16 @@ function isValidUrl(ref) {
 	}
 }
 
+function isPathRef(ref) {
+	return ref.startsWith("/") || ref.startsWith("./") || ref.startsWith("../") || ref.startsWith("file:///");
+}
+
 function getModuleReferenceMode(ref) {
-	if(ref.startsWith("/") || ref.startsWith("./") || ref.startsWith("../") || ref.startsWith("file:///")) {
+	if(ref.startsWith("data:")) {
+		return "data";
+	}
+
+	if(isPathRef(ref)) {
 		return "fs";
 	}
 
@@ -23,9 +31,35 @@ function getModuleReferenceMode(ref) {
 	return "bare";
 }
 
-export function getModuleInfo(name) {
+function resolveLocalPaths(ref, root) {
+	if(!root || !isPathRef(ref)) {
+		return ref;
+	}
+
+	if(!root.startsWith("file:///")) {
+		let rootUrl = new URL(root, `file:`);
+		let {href, pathname} = new URL(ref, rootUrl);
+
+		// `fs` mode
+		if(href.startsWith("file:///")) {
+			return "./" + href.slice(`file:///`.length);
+		}
+
+		// `url` mode
+		return pathname;
+	}
+
+	let u = new URL(ref, root);
+	return u.href;
+}
+
+export function getModuleInfo(name, root) {
 	let info = { name };
 	try {
+		// resolve relative paths to the virtual or real file path of the script
+
+		name = resolveLocalPaths(name, root);
+
 		let u = resolveModule(name);
 		info.path = u;
 		info.mode = getModuleReferenceMode(u);
@@ -33,6 +67,7 @@ export function getModuleInfo(name) {
 		// unresolvable name
 		info.path = name;
 		info.mode = getModuleReferenceMode(name);
+		// console.error( {e} );
 	}
 
 	return info;
