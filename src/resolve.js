@@ -55,11 +55,10 @@ function resolveLocalPaths(ref, root) {
 
 export function getModuleInfo(name, root) {
 	let info = { name };
+	// resolve relative paths to the virtual or real file path of the script
+	name = resolveLocalPaths(name, root);
+
 	try {
-		// resolve relative paths to the virtual or real file path of the script
-
-		name = resolveLocalPaths(name, root);
-
 		let u = resolveModule(name);
 		info.path = u;
 		info.mode = getModuleReferenceMode(u);
