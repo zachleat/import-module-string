@@ -29,20 +29,20 @@ export function walkCode(ast) {
 		},
 		VariableDeclarator(node) {
 			// destructuring assignment Array
-			if(node.id.type === "ArrayPattern") {
+			if(node?.id?.type === "ArrayPattern") {
 				for(let prop of node.id.elements) {
-					if(prop.type === "Identifier") {
+					if(prop?.type === "Identifier") {
 						globals.add(prop.name);
 					}
 				}
-			} else if(node.id.type === "ObjectPattern") {
+			} else if(node?.id?.type === "ObjectPattern") {
 				// destructuring assignment Object
 				for(let prop of node.id.properties) {
-					if(prop.type === "Property") {
+					if(prop?.type === "Property") {
 						globals.add(prop.value.name);
 					}
 				}
-			} else if(node.id.name) {
+			} else if(node?.id?.name) {
 				globals.add(node.id.name);
 			}
 		},
