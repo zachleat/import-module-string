@@ -124,3 +124,7 @@ await importFromString("import fs from 'node:fs';");
 // Returns where available (`node:fs` is not typically available in browser)
 { fs: { /* … */ } }
 ```
+
+## Changelog
+
+- `v1.0.4` add `adapter` option (use `adapter: "fs"` or `adapter: "fetch"`) to resolve imports in various environments.
