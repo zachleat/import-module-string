@@ -2,9 +2,9 @@ import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 import { expectError } from "./test-utils.js";
-import { emulateImportMap } from "./util-emulate-importmap.js";
-import { preprocessNode, resolveImportContentNode } from "./util-fs-adapter.js";
-import { preprocessBrowser, resolveImportContentBrowser } from "./util-fetch-adapter.js";
+import { emulateImportMap } from "../src/emulate-importmap.js";
+import { preprocessNode, resolveImportContentNode } from "../src/adapter-fs.js";
+import { preprocessBrowser, resolveImportContentBrowser } from "../src/adapter-fetch.js";
 import { importFromString } from "../import-module-string.js"
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;

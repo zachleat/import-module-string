@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { preprocessNode, resolveImportContentNode } from "./util-fs-adapter.js";
+import { preprocessNode, resolveImportContentNode } from "../src/adapter-fs.js";
 import { importFromString } from "../import-module-string.js";
 
 // This test only exists because of a Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953

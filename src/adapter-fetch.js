@@ -1,4 +1,4 @@
-import { emulateImportMap } from "./util-emulate-importmap.js";
+import { emulateImportMap } from "./emulate-importmap.js";
 
 export async function resolveImportContentBrowser(moduleInfo = {}) {
 	let {mode, path} = moduleInfo;

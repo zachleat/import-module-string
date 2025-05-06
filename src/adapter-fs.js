@@ -2,7 +2,7 @@
 import fs from "node:fs";
 // Vite error (even though this file isn’t used in-browser)
 // import { fileURLToPath } from "node:url";
-import { emulateImportMap } from "./util-emulate-importmap.js";
+import { emulateImportMap } from "./emulate-importmap.js";
 
 export async function preprocessNode(codeStr, { resolved }) {
 	let importMap = {
