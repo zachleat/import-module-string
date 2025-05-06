@@ -25,7 +25,7 @@ npm install import-module-string
 |---|---|---|
 |`import('./file.js')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
 |`import('bare')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
-|`import('built-in')`|✅|_N/A_|
+|`import('built-in')`|✅ (no adapter needed)|_N/A_|
 |`require()`|✅ with `addRequire` option|❌|
 |`import.meta.url`|✅ with `filePath` option|✅ with `filePath` option|
 
@@ -96,13 +96,13 @@ await importFromString("import dep from './dependency.js';", {
 	adapter: "fs", // use "fetch" in-browser
 });
 
-// Only when provided by runtime (`fs` is not available in browser, usually)
+// Returns
 { dep: 2 }
 ```
 
 #### Bare references
 
-Uses `import.meta.resolve` to resolve paths (Import Map friendly!)
+Uses `import.meta.resolve` to resolve paths, which will also resolve using Import Maps (where available).
 
 ```js
 // `dependency.js` has the content `export default 2;`
@@ -110,15 +110,17 @@ await importFromString("import {noop} from '@zachleat/noop';", {
 	adapter: "fs", // use "fetch" in-browser
 });
 
-// Only when provided by runtime (`fs` is not available in browser, usually)
+// Returns
 { noop: function() {} }
 ```
 
 #### Builtins
 
+An adapter is not required.
+
 ```js
 await importFromString("import fs from 'node:fs';");
 
-// Only when provided by runtime (`fs` is not available in browser, usually)
+// Returns where available (`node:fs` is not typically available in browser)
 { fs: { /* … */ } }
 ```
