@@ -18,14 +18,21 @@ npm install import-module-string
 - Emulates `import.meta.url` when `filePath` option is supplied
 - `addRequire` option adds support for `require()` (in Node)
 - Extremely limited dependency footprint (`acorn` for JS parsing only)
-- Allows providing an external data object to pass in data (must be JSON.stringify friendly)
+- Supports data object to pass in data (must be JSON.stringify friendly, more serialization options may be added later)
+- Subject to URL content [size maximums](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/data#length_limitations): Chrome `512MB`, Safari `2048MB`, Firefox `512MB`, Firefox prior to v137 `32MB`
 
-## Limitations
+|Feature|Server|Browser|
+|---|---|---|
+|`import('./file.js')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
+|`import('bare')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
+|`import('built-in')`|✅|_N/A_|
+|`require()`|✅ with `addRequire` option|❌|
+|`import.meta.url`|✅ with `filePath` option|✅ with `filePath` option|
 
-- import (in Browser) targets _must_ be mapped via an Import Map in HTML.
-- import (in Node) targets are limited to _built-in modules only_.
-- Context data passed to script must be JSON.stringify-friendly (more serialization options may be added later).
-- Script content [size maximums](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/data#length_limitations): Chrome `512MB`, Safari `2048MB`, Firefox `512MB`, Firefox prior to v137 `32MB`
+Notes:
+
+- [built-in](https://nodejs.org/api/module.html#moduleisbuiltinmodulename) modules are provided by the JavaScript runtime. `node:fs` is one example.
+- `bare` specifiers are packages referenced by their bare name. In Node this might be a package installed from npm.
 
 ## Usage
 
@@ -64,8 +71,7 @@ let b = 2;`);
 ### Pass in data
 
 ```js
-let data = { b: 2 };
-await importFromString("const a = b;", { data });
+await importFromString("const a = b;", { data: { b: 2 } });
 
 // Returns
 { a: 2 }
@@ -74,9 +80,45 @@ await importFromString("const a = b;", { data });
 ### Pass in filePath
 
 ```js
-let data = { b: 2 };
 await importFromString("const a = import.meta.url;", { filePath: import.meta.url });
 
 // Returns value for import.meta.url, example shown
 { a: `file:///…` }
+```
+
+### Imports (experimental feature)
+
+#### Relative references
+
+```js
+// `dependency.js` has the content `export default 2;`
+await importFromString("import dep from './dependency.js';", {
+	adapter: "fs", // use "fetch" in-browser
+});
+
+// Only when provided by runtime (`fs` is not available in browser, usually)
+{ dep: 2 }
+```
+
+#### Bare references
+
+Uses `import.meta.resolve` to resolve paths (Import Map friendly!)
+
+```js
+// `dependency.js` has the content `export default 2;`
+await importFromString("import {noop} from '@zachleat/noop';", {
+	adapter: "fs", // use "fetch" in-browser
+});
+
+// Only when provided by runtime (`fs` is not available in browser, usually)
+{ noop: function() {} }
+```
+
+#### Builtins
+
+```js
+await importFromString("import fs from 'node:fs';");
+
+// Only when provided by runtime (`fs` is not available in browser, usually)
+{ fs: { /* … */ } }
 ```
