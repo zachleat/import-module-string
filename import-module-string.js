@@ -88,8 +88,10 @@ export async function getCode(codeStr, options = {}) {
 							adapter,
 						});
 
-						// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
-						moduleInfo.target = await getTargetDataUri(code);
+						if(code?.trim()) {
+							// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
+							moduleInfo.target = await getTargetDataUri(code);
+						}
 					}
 				}
 			}
