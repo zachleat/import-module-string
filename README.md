@@ -93,7 +93,8 @@ await importFromString("const a = import.meta.url;", { filePath: import.meta.url
 ```js
 // `dependency.js` has the content `export default 2;`
 await importFromString("import dep from './dependency.js';", {
-	adapter: "fs", // use "fetch" in-browser
+	// uses `fetch("./dependency.js")` in-browser
+	adapter: "fs",
 });
 
 // Returns
@@ -107,7 +108,8 @@ Uses `import.meta.resolve` to resolve paths, which will also resolve using Impor
 ```js
 // `dependency.js` has the content `export default 2;`
 await importFromString("import {noop} from '@zachleat/noop';", {
-	adapter: "fs", // use "fetch" in-browser
+	// uses `fetch(import.meta.resolve("@zachleat/noop"))` in-browser (import-mappable)
+	adapter: "fs",
 });
 
 // Returns
