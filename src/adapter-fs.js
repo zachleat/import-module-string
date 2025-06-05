@@ -1,5 +1,5 @@
 
-import fs from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { ImportTransformer } from "esm-import-transformer";
 
 // Vite error (even though this file isn’t used in-browser)
@@ -46,11 +46,11 @@ export async function resolveImportContent(moduleInfo = {}) {
 		path = fileURLToPath(path);
 	}
 
-	if(fs.existsSync(path)) {
-		return fs.readFileSync(path, "utf8");
+	if(existsSync(path)) {
+		return readFileSync(path, "utf8");
 	}
 	if(isRelative) {
-		return fs.readFileSync(name, "utf8");
+		return readFileSync(name, "utf8");
 	}
 
 	throw new Error("Could not find content for module: " + JSON.stringify(moduleInfo));
