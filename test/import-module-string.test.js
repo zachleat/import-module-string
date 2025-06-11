@@ -234,8 +234,22 @@ test.skipIf(!isNodeMode)("error: dynamic import(npm package)", async t => {
 });
 
 /*
- * Combo Node and Browser tests don’t work in Vitest (in Node)
+ * Combo Node and Browser tests may not work in Vitest in Node (if the code path relies on import.meta.resolve)
  */
+
+test("resolveImportContent", async t => {
+	let res = await importFromString(`import dep from './test/dep1.js';
+import dep2 from './test/dep2.js';`, {
+		resolveImportContent: function(moduleInfo) {
+			// This allows us to write our own adapters based on module information
+			// In this test we just simply always return `2`
+			return `export default 2;`
+		}
+	});
+
+	assert.equal(res.dep, 2);
+	assert.equal(res.dep2, 2);
+});
 
 // Tests that import from relative references *WORK* but are not supported in Node + Vitest https://github.com/vitest-dev/vitest/issues/6953
 // We run these tests separately using Node’s Test Runner: see test/manual-node-test.js

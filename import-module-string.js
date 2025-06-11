@@ -32,12 +32,13 @@ export function resolveModule(ref) {
 }
 
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, adapter, addRequire } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
 		addRequire: false, // add polyfill for `require()` (Node-only)
 
+		resolveImportContent: undefined,
 		// TODO add explicit importMap object option
 
 		// Internal
@@ -50,6 +51,25 @@ export async function getCode(codeStr, options = {}) {
 	let { globals, features, imports } = walkCode(ast);
 
 	let resolved = Array.from(imports).map(u => getModuleInfo(u, filePath));
+
+	// Important: Node supports importing builtins here, this adds support for resolving non-builtins
+	// This allows the use of an `fs` adapter in-browser!
+	if(typeof resolveImportContent === "function") {
+		for(let moduleInfo of resolved) {
+			let content = await resolveImportContent(moduleInfo);
+			if(content) {
+				let code = await getCode(content, {
+					filePath: moduleInfo.path,
+					resolveImportContent,
+				});
+
+				if(code?.trim()) {
+					// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
+					moduleInfo.target = await getTargetDataUri(code);
+				}
+			}
+		}
+	}
 
 	let result = await preprocess(codeStr, { globals, features, imports, resolved });
 	if(typeof result === "string") {

@@ -60,7 +60,14 @@ function resolveLocalPaths(ref, root) {
 
 export function getModuleInfo(name, root) {
 	let mode = getModuleReferenceMode(name);
-	let info = { name, mode };
+	let info = {
+		name,
+		mode,
+		original: {
+			path: name,
+			mode,
+		}
+	};
 
 	if(mode === "relative" && root) {
 		// resolve relative paths to the virtual or real file path of the script

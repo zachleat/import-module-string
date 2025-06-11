@@ -17,10 +17,10 @@ export async function preprocess(codeStr, { resolved }) {
 	};
 
 	for(let {path, name, target, isMetaResolved} of resolved) {
-		if(isMetaResolved) { // resolved path
-			importMap.imports[name] = path;
-		} else if(target) { // when import.meta.resolve isn’t supported (Vite)
+		if(target) { // from `resolveImportContent` when overriding how content is fetched (preferred to meta resolved targets)
 			importMap.imports[name] = target;
+		} else if(isMetaResolved) { // resolved path
+			importMap.imports[name] = path;
 		}
 	}
 
