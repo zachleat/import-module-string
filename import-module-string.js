@@ -56,7 +56,12 @@ export async function getCode(codeStr, options = {}) {
 	// This allows the use of an `fs` adapter in-browser!
 	if(typeof resolveImportContent === "function") {
 		for(let moduleInfo of resolved) {
-			let content = await resolveImportContent(moduleInfo);
+			// { path, mode, resolved }
+			let moduleInfoArg = {
+				...moduleInfo.original,
+				...({ resolved: moduleInfo.isMetaResolved ? moduleInfo.path : undefined }),
+			}
+			let content = await resolveImportContent(moduleInfoArg);
 			if(content) {
 				let code = await getCode(content, {
 					filePath: moduleInfo.path,

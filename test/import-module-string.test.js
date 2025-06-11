@@ -241,6 +241,10 @@ test("resolveImportContent", async t => {
 	let res = await importFromString(`import dep from './test/dep1.js';
 import dep2 from './test/dep2.js';`, {
 		resolveImportContent: function(moduleInfo) {
+			assert.isOk(moduleInfo.path === "./test/dep1.js" || moduleInfo.path === "./test/dep2.js")
+			assert.isOk(moduleInfo.mode === "relative")
+			// assert.isOk(moduleInfo.resolved) // Not in Vite
+
 			// This allows us to write our own adapters based on module information
 			// In this test we just simply always return `2`
 			return `export default 2;`
