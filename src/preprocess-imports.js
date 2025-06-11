@@ -11,24 +11,16 @@ function emulateImportMap(code, importMap) {
 	return transformedCode;
 }
 
-export async function resolveImportContent(moduleInfo = {}) {
-	let {mode, path} = moduleInfo;
-	if(mode !== "url") {
-		return;
-	}
-
-	let f = await fetch(path);
-	let content = await f.text();
-	return content;
-}
-
 export async function preprocess(codeStr, { resolved }) {
 	let importMap = {
 		imports: {}
 	};
-	for(let res of resolved) {
-		if(res.target) {
-			importMap.imports[res.name] = res.target;
+
+	for(let {path, name, target, isMetaResolved} of resolved) {
+		if(isMetaResolved) { // resolved path
+			importMap.imports[name] = path;
+		} else if(target) { // when import.meta.resolve isn’t supported (Vite)
+			importMap.imports[name] = target;
 		}
 	}
 

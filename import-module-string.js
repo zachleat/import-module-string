@@ -3,6 +3,7 @@ import { walkCode } from "./src/walk-code.js";
 import { stringifyData } from "./src/stringify-data.js";
 import { getModuleInfo } from "./src/resolve.js";
 import { getTarget, getTargetDataUri } from "./src/url.js";
+import { preprocess } from "./src/preprocess-imports.js";
 
 export { parseCode, walkCode, getTarget, getTargetDataUri, getModuleInfo };
 
@@ -30,32 +31,14 @@ export function resolveModule(ref) {
 	return import.meta.resolve(ref);
 }
 
-function getAdapter(ref) {
-	if(ref === "fetch") {
-		// dynamic import not necessary here but we use it for consistency
-		return import("./src/adapter-fetch.js");
-	} else if(ref === "fs") {
-		// dynamic import here to avoid Vite bundler with `fs` on client errors
-		return import("./src/adapter-fs.js");
-	}
-
-	// Supported adapter functions (async-friendly)
-	// resolveImportContent: (specifier) { return code },
-	// preprocess: (code) { return code }
-
-	if(ref?.resolveImportContent || ref?.preprocess) {
-		return ref;
-	}
-}
-
 export async function getCode(codeStr, options = {}) {
 	let { ast, acornOptions, data, filePath, implicitExports, adapter, addRequire } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
-
-		adapter: undefined,
 		addRequire: false, // add polyfill for `require()` (Node-only)
+
+		// TODO add explicit importMap object option
 
 		// Internal
 		ast: undefined,
@@ -68,36 +51,9 @@ export async function getCode(codeStr, options = {}) {
 
 	let resolved = Array.from(imports).map(u => getModuleInfo(u, filePath));
 
-	if(adapter) {
-		let adapterImplementation = await getAdapter(adapter);
-		if(adapterImplementation) {
-			let { resolveImportContent, preprocess } = adapterImplementation;
-
-			// Important: Node supports importing builtins here, this adds support for resolving non-builtins
-			if(typeof resolveImportContent === "function") {
-				for(let moduleInfo of resolved) {
-					let content = await resolveImportContent(moduleInfo);
-					if(content) {
-						let code = await getCode(content, {
-							filePath: moduleInfo.path,
-							adapter,
-						});
-
-						if(code?.trim()) {
-							// This needs to be `getTargetDataUri` in-browser (even though it supports Blob urls).
-							moduleInfo.target = await getTargetDataUri(code);
-						}
-					}
-				}
-			}
-
-			if(typeof preprocess === "function") {
-				let result = await preprocess(codeStr, { globals, features, imports, resolved });
-				if(typeof result === "string") {
-					codeStr = result;
-				}
-			}
-		}
+	let result = await preprocess(codeStr, { globals, features, imports, resolved });
+	if(typeof result === "string") {
+		codeStr = result;
 	}
 
 	let pre = [];

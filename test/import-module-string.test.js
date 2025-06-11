@@ -5,7 +5,7 @@ import { expectError } from "./test-utils.js";
 // import { emulateImportMap } from "../src/emulate-importmap.js";
 import { importFromString } from "../import-module-string.js"
 
-const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;
+const isNodeMode = typeof process !== "undefined" && Boolean(process?.env?.NODE);
 const isVitestBrowserMode = Boolean(globalThis['__vitest_browser__']);
 
 test("Using export", async () => {
@@ -142,7 +142,6 @@ test("import.meta.url (filePath override)", async t => {
 
 test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
-		adapter: "fs",
 		addRequire: true,
 		filePath: import.meta.url,
 	});
@@ -234,37 +233,22 @@ test.skipIf(!isNodeMode)("error: dynamic import(npm package)", async t => {
 	assert.isOk(error.message.startsWith("Failed to resolve module specifier") || error.message === "Invalid URL", error.message);
 });
 
-test.skipIf(!isNodeMode)("error: import from local script", async t => {
-	let error = await expectError(async () => {
-		await importFromString("import dep from './test/dependency.js';");
-	});
-
-	let messages = [
-		"Invalid URL",
-		`Failed to resolve module specifier "./test/dependency.js"`,
-		"Error resolving module specifier “./test/dependency.js”.",
-		"Module name, './test/dependency.js' does not resolve to a valid URL.",
-	];
-
-	assert.isOk(messages.find(msg => error.message.startsWith(msg)), error.message);
-});
-
 /*
- * Combo Node and Browser tests need to be colocated
+ * Combo Node and Browser tests don’t work in Vitest (in Node)
  */
 
-test("import from local script (inline)", async t => {
-	let res = await importFromString("import dep from './test/dependency.js';", {
-		adapter: isNodeMode ? "fs" : "fetch",
-	});
+// Tests that import from relative references *WORK* but are not supported in Node + Vitest https://github.com/vitest-dev/vitest/issues/6953
+// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
+test.skipIf(isNodeMode)("import from local script (inline)", async t => {
+	let res = await importFromString("import dep from './test/dependency.js';");
 
 	assert.typeOf(res.dep, "number");
 });
 
-test("import from local script (inline) with import local script", async t => {
-	let res = await importFromString("import {num} from './test/dependency-with-import.js';", {
-		adapter: isNodeMode ? "fs" : "fetch",
-	});
+// Tests that import from relative references *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
+// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
+test.skipIf(isNodeMode)("import from local script (inline) with import local script", async t => {
+	let res = await importFromString("import {num} from './test/dependency-with-import.js';");
 
 	assert.equal(res.num, 2);
 });
@@ -272,8 +256,6 @@ test("import from local script (inline) with import local script", async t => {
 // Tests that import from npm packages *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
 // We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
 test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
-	let res = await importFromString("import { noop } from '@zachleat/noop';", {
-		adapter: isNodeMode ? "fs" : "fetch",
-	});
+	let res = await importFromString("import { noop } from '@zachleat/noop';");
 	assert.typeOf(res.noop, "number");
 });
