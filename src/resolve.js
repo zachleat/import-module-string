@@ -10,8 +10,12 @@ function isValidUrl(ref) {
 	}
 }
 
-function isPathRef(ref) {
-	return ref.startsWith("/") || ref.startsWith("./") || ref.startsWith("../") || ref.startsWith("file:///");
+function isRelativeRef(ref) {
+	return ref.startsWith("/") || ref.startsWith("./") || ref.startsWith("../");
+}
+
+function isAbsolute(ref) {
+	return ref.startsWith("file:///") || isValidUrl(ref);
 }
 
 function getModuleReferenceMode(ref) {
@@ -19,12 +23,12 @@ function getModuleReferenceMode(ref) {
 		return "data";
 	}
 
-	if(isPathRef(ref)) {
-		return "fs";
+	if(isAbsolute(ref)) {
+		return "absolute";
 	}
 
-	if(isValidUrl(ref)) {
-		return "url";
+	if(isRelativeRef(ref)) {
+		return "relative";
 	}
 
 	// unknown, probably a bare specifier
@@ -32,41 +36,60 @@ function getModuleReferenceMode(ref) {
 }
 
 function resolveLocalPaths(ref, root) {
-	if(!root || !isPathRef(ref)) {
-		return ref;
+	if(!root) {
+		throw new Error("Missing `root` to resolve import reference");
 	}
 
-	if(!root.startsWith("file:///")) {
-		let rootUrl = new URL(root, `file:`);
-		let {href, pathname} = new URL(ref, rootUrl);
-
-		// `fs` mode
-		if(href.startsWith("file:///")) {
-			return "./" + href.slice(`file:///`.length);
-		}
-
-		// `url` mode
-		return pathname;
+	// Unresolved relative urls
+	if(root.startsWith("file:///")) {
+		let u = new URL(ref, root);
+		return u.href;
 	}
 
-	let u = new URL(ref, root);
-	return u.href;
+	let rootUrl = new URL(root, `file:`);
+	let {href, pathname} = new URL(ref, rootUrl);
+
+	// `fs` mode
+	if(href.startsWith("file:///")) {
+		return "./" + href.slice(`file:///`.length);
+	}
+
+	// `url` mode
+	return pathname;
 }
 
 export function getModuleInfo(name, root) {
-	let info = { name };
-	// resolve relative paths to the virtual or real file path of the script
-	name = resolveLocalPaths(name, root);
+	let mode = getModuleReferenceMode(name);
+	let info = {
+		name,
+		mode,
+		original: {
+			path: name,
+			mode,
+		}
+	};
+
+	if(mode === "relative" && root) {
+		// resolve relative paths to the virtual or real file path of the script
+		try {
+			root = resolveModule(root);
+		} catch(e) {
+			// Unresolvable `filePath`, recover gracefully
+		}
+
+		name = resolveLocalPaths(name, root);
+	}
 
 	try {
 		let u = resolveModule(name);
 		info.path = u;
 		info.mode = getModuleReferenceMode(u);
+		info.isMetaResolved = true;
 	} catch(e) {
-		// unresolvable name
+		// unresolvable name, recover gracefully
 		info.path = name;
-		info.mode = getModuleReferenceMode(name);
-		// console.error( {e} );
+		info.isMetaResolved = false;
+		// console.error( e );
 	}
 
 	return info;

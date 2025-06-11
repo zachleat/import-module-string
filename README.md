@@ -23,9 +23,9 @@ npm install import-module-string
 
 |Feature|Server|Browser|
 |---|---|---|
-|`import('./file.js')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
-|`import('bare')`|✅ with `adapter: "fs"`|✅ with Import Map or `adapter: "fetch"`|
-|`import('built-in')`|✅ (no adapter needed)|_N/A_|
+|`import('./file.js')`|✅|✅ (Import Map-friendly)|
+|`import('bare')`|✅|✅ (Import Map-friendly)|
+|`import('built-in')`|✅|_N/A_|
 |`require()`|✅ with `addRequire` option|❌|
 |`import.meta.url`|✅ with `filePath` option|✅ with `filePath` option|
 
@@ -92,10 +92,7 @@ await importFromString("const a = import.meta.url;", { filePath: import.meta.url
 
 ```js
 // `dependency.js` has the content `export default 2;`
-await importFromString("import dep from './dependency.js';", {
-	// uses `fetch("./dependency.js")` in-browser
-	adapter: "fs",
-});
+await importFromString("import dep from './dependency.js';");
 
 // Returns
 { dep: 2 }
@@ -107,10 +104,8 @@ Uses `import.meta.resolve` to resolve paths, which will also resolve using Impor
 
 ```js
 // `dependency.js` has the content `export default 2;`
-await importFromString("import {noop} from '@zachleat/noop';", {
-	// uses `fetch(import.meta.resolve("@zachleat/noop"))` in-browser (import-mappable)
-	adapter: "fs",
-});
+// maps "@zachleat/noop" to `import.meta.resolve("@zachleat/noop"))` in-browser (Import Map friendly)
+await importFromString("import {noop} from '@zachleat/noop';");
 
 // Returns
 { noop: function() {} }
@@ -129,5 +124,6 @@ await importFromString("import fs from 'node:fs';");
 
 ## Changelog
 
+- `v2.0.0` removes `adapter` (no longer necessary!)
 - `v1.0.5` bug fixes
-- `v1.0.4` add `adapter` option (use `adapter: "fs"` or `adapter: "fetch"`) to resolve imports in various environments.
+- `v1.0.4` add `adapter` option (add `adapter: "fs"` or `adapter: "fetch"`) to resolve imports in various environments.

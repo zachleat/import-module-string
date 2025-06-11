@@ -11,24 +11,16 @@ function emulateImportMap(code, importMap) {
 	return transformedCode;
 }
 
-export async function resolveImportContent(moduleInfo = {}) {
-	let {mode, path} = moduleInfo;
-	if(mode !== "url") {
-		return;
-	}
-
-	let f = await fetch(path);
-	let content = await f.text();
-	return content;
-}
-
 export async function preprocess(codeStr, { resolved }) {
 	let importMap = {
 		imports: {}
 	};
-	for(let res of resolved) {
-		if(res.target) {
-			importMap.imports[res.name] = res.target;
+
+	for(let {path, name, target, isMetaResolved} of resolved) {
+		if(target) { // from `resolveImportContent` when overriding how content is fetched (preferred to meta resolved targets)
+			importMap.imports[name] = target;
+		} else if(isMetaResolved) { // resolved path
+			importMap.imports[name] = path;
 		}
 	}
 

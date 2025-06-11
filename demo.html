@@ -22,9 +22,7 @@
 		console.log( getModuleInfo("acorn") );
 		console.log( getModuleInfo("./test/dependency.js") );
 
-		let res = await importFromString('import dep from "./test/dependency.js";', {
-			adapter: "fetch",
-		});
+		let res = await importFromString('import dep from "./test/dependency.js";');
 		console.log( res.dep, "should be 2" );
 
 		const { noop, noopSync } = await importFromString('import { noop, noopSync } from "@zachleat/noop";')
