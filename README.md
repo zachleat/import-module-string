@@ -103,8 +103,7 @@ await importFromString("import dep from './dependency.js';");
 Uses `import.meta.resolve` to resolve paths, which will also resolve using Import Maps (where available).
 
 ```js
-// `dependency.js` has the content `export default 2;`
-// maps "@zachleat/noop" to `import.meta.resolve("@zachleat/noop"))` in-browser (Import Map friendly)
+// maps with `import.meta.resolve("@zachleat/noop"))` in-browser (Import Map friendly)
 await importFromString("import {noop} from '@zachleat/noop';");
 
 // Returns
@@ -113,14 +112,14 @@ await importFromString("import {noop} from '@zachleat/noop';");
 
 #### Builtins
 
-An adapter is not required.
-
 ```js
 await importFromString("import fs from 'node:fs';");
 
-// Returns where available (`node:fs` is not typically available in browser)
+// Returns (where available: `node:fs` is not typically available in browser)
 { fs: { /* … */ } }
 ```
+
+As a side note, you _can_ shim `fs` into the browser with [`memfs`](https://github.com/streamich/memfs).
 
 ## Changelog
 
