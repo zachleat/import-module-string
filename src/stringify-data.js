@@ -1,11 +1,5 @@
-// TODO add option to pass in your own serialization function
-// import serialize from "serialize-to-js";
-
 export function stringifyData(data = {}) {
 	return Object.entries(data).map(([varName, varValue]) => {
-		// Better, but another dep
-		// return `const ${varName} = ${serialize(varValue)};`;
-
 		// JSON
 		return `const ${varName} = ${JSON.stringify(varValue, function replacer(key, value) {
 			if(typeof value === "function") {

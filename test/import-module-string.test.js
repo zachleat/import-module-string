@@ -1,5 +1,6 @@
 import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
+import serialize from "serialize-to-js";
 
 import { expectError } from "./test-utils.js";
 // import { emulateImportMap } from "../src/emulate-importmap.js";
@@ -116,6 +117,21 @@ test("JSON unfriendly data throws error", async t => {
 	}))
 
 	assert.isOk(error.message.startsWith("Data passed to 'import-module-string' needs to be JSON.stringify friendly."), error.message);
+});
+
+test("Use custom serializeData callback function", async t => {
+	let res = await importFromString("const ret = fn()", {
+		data: {
+			fn: function() { return 1 }
+		},
+		serializeData: function(data) {
+			return Object.entries(data).map(([varName, varValue]) => {
+				return `const ${varName} = ${serialize(varValue)};`;
+			}).join("\n");
+		}
+	});
+	assert.typeOf(res.ret, "number");
+	assert.equal(res.ret, 1);
 });
 
 test("export anonymous function", async t => {

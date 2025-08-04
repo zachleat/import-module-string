@@ -28,6 +28,7 @@
     "@zachleat/noop": "^1.0.6",
     "http-server": "^14.1.1",
     "playwright": "^1.54.1",
+    "serialize-to-js": "^3.1.2",
     "vitest": "^3.2.4"
   },
   "dependencies": {

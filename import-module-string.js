@@ -32,13 +32,14 @@ export function resolveModule(ref) {
 }
 
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent, serializeData: stringifyDataOptionCallback } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
 		addRequire: false, // add polyfill for `require()` (Node-only)
 
 		resolveImportContent: undefined,
+		serializeData: undefined,
 		// TODO add explicit importMap object option
 
 		// Internal
@@ -90,7 +91,7 @@ export async function getCode(codeStr, options = {}) {
 		data.__importmetaurl = filePath;
 	}
 
-	pre.push(stringifyData(data));
+	pre.push(typeof stringifyDataOptionCallback === "function" ? await stringifyDataOptionCallback(data) : stringifyData(data));
 
 	if(addRequire) {
 		pre.push(`import { createRequire } from "node:module";\nconst require = createRequire("${filePath || "/"}");\n`);
