@@ -3,6 +3,8 @@ import * as walk from "acorn-walk";
 export function walkCode(ast) {
 	let globals = new Set();
 	let imports = new Set();
+	let used = new Set();
+
 	let features = {
 		export: false,
 		require: false,
@@ -10,6 +12,12 @@ export function walkCode(ast) {
 	};
 
 	let types = {
+		Identifier(node) {
+			// variables used
+			if(node?.name) {
+				used.add(node?.name)
+			}
+		},
 		MetaProperty(node) {
 			// This script uses `import.meta.url`
 			features.importMetaUrl = true;
@@ -18,6 +26,8 @@ export function walkCode(ast) {
 			if(node?.callee?.name === "require") {
 				features.require = true;
 			}
+			// function used
+			used.add(node?.callee?.name);
 		},
 		// e.g. var b = function() {}
 		// FunctionExpression is already handled by VariableDeclarator
@@ -79,5 +89,6 @@ export function walkCode(ast) {
 		globals,
 		imports,
 		features,
+		used,
 	};
 }
