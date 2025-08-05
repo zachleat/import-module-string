@@ -3,7 +3,7 @@ import * as walk from "acorn-walk";
 export function walkCode(ast) {
 	let globals = new Set();
 	let imports = new Set();
-	let used = new Set();
+	let usedVariables = new Set();
 
 	let features = {
 		export: false,
@@ -13,9 +13,9 @@ export function walkCode(ast) {
 
 	let types = {
 		Identifier(node) {
-			// variables used
-			if(node?.name) {
-				used.add(node?.name)
+			// variables used, must not be an existing global or host object
+			if(node?.name && !(node?.name in globalThis)) {
+				usedVariables.add(node?.name)
 			}
 		},
 		MetaProperty(node) {
@@ -27,7 +27,7 @@ export function walkCode(ast) {
 				features.require = true;
 			}
 			// function used
-			used.add(node?.callee?.name);
+			usedVariables.add(node?.callee?.name);
 		},
 		// e.g. var b = function() {}
 		// FunctionExpression is already handled by VariableDeclarator
@@ -84,11 +84,16 @@ export function walkCode(ast) {
 
 	walk.simple(ast, types);
 
+	// remove declarations from used
+	for(let name of globals) {
+		usedVariables.delete(name);
+	}
+
 	return {
 		ast,
 		globals,
 		imports,
 		features,
-		used,
+		used: usedVariables,
 	};
 }
