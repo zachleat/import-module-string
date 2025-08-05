@@ -1,6 +1,6 @@
 {
   "name": "import-module-string",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Use import('data:') and import(Blob) to execute arbitrary JavaScript strings",
   "main": "import-module-string.js",
   "scripts": {
