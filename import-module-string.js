@@ -77,7 +77,7 @@ export async function getCode(codeStr, options = {}) {
 		}
 	}
 
-	let result = await preprocess(codeStr, { globals, features, imports, resolved });
+	let result = await preprocess(codeStr, { globals, features, imports, resolved, ast });
 	if(typeof result === "string") {
 		codeStr = result;
 	}
@@ -97,7 +97,7 @@ export async function getCode(codeStr, options = {}) {
 		pre.push(`import { createRequire } from "node:module";\nconst require = createRequire("${filePath || "/"}");\n`);
 	}
 
-	// don’t add `export { ...globals }` if the code is *already* using `export`
+	// add `export { ...globals }` but only if the code is *NOT* already using `export`
 	if(implicitExports && !features.export && globals.size > 0) {
 		post.push(`export { ${Array.from(globals).join(", ")} }`);
 	}

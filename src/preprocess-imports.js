@@ -4,14 +4,7 @@ import { ImportTransformer } from "esm-import-transformer";
 // Import Map some day (though not yet supported in Firefox):
 // https://github.com/mdn/mdn/issues/672
 
-function emulateImportMap(code, importMap) {
-	// TODO re-use ast?
-	let tf = new ImportTransformer(code);
-	let transformedCode = tf.transformWithImportMap(importMap);
-	return transformedCode;
-}
-
-export async function preprocess(codeStr, { resolved }) {
+export async function preprocess(codeStr, { resolved, ast }) {
 	let importMap = {
 		imports: {}
 	};
@@ -25,6 +18,8 @@ export async function preprocess(codeStr, { resolved }) {
 	}
 
 	if(Object.keys(importMap?.imports || {}).length > 0) {
-		return emulateImportMap(codeStr, importMap);
+		let transformer = new ImportTransformer(codeStr, ast);
+		let code = transformer.transformWithImportMap(importMap);
+		return code;
 	}
 }
