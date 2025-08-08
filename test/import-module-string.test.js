@@ -293,3 +293,37 @@ test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMod
 	let res = await importFromString("import { noop } from '@zachleat/noop';");
 	assert.typeOf(res.noop, "number");
 });
+
+test("Use compileAsFunction to return function wrapper", async t => {
+	let mod = await importFromString(`export const ret = fn();`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({
+		fn: function() { return 1 }
+	});
+
+	assert.typeOf(res.ret, "number");
+	assert.equal(res.ret, 1);
+});
+
+// Tests that import from npm packages *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
+// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
+test.skipIf(isNodeMode)("Use compileAsFunction to return function wrapper (with an import)", async t => {
+	let mod = await importFromString(`import {num} from './test/dependency-with-import.js';
+export { num };
+export const ret = fn();`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({
+		fn: function() { return 1 }
+	});
+
+	assert.typeOf(res.num, "number");
+	assert.equal(res.num, 2);
+	assert.typeOf(res.ret, "number");
+	assert.equal(res.ret, 1);
+});

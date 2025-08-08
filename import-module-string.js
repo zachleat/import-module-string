@@ -32,7 +32,7 @@ export function resolveModule(ref) {
 }
 
 export async function getCode(codeStr, options = {}) {
-	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent, serializeData: stringifyDataOptionCallback } = Object.assign({
+	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent, serializeData: stringifyDataOptionCallback, compileAsFunction } = Object.assign({
 		data: {},
 		filePath: undefined,
 		implicitExports: true, // add `export` if no `export` is included in code
@@ -45,11 +45,15 @@ export async function getCode(codeStr, options = {}) {
 		// Internal
 		ast: undefined,
 		acornOptions: {}, // see defaults in walk-code.js
+
+		// Returns a default export function wrapped around the code for execution later (with your own custom context).
+		// `import` and `export`-friendly and avoids the need for any data serialization!
+		compileAsFunction: false,
 	}, options);
 
 	ast ??= parseCode(codeStr, acornOptions);
 
-	let { globals, features, imports } = walkCode(ast);
+	let { globals, features, imports, used } = walkCode(ast);
 
 	let resolved = Array.from(imports).map(u => getModuleInfo(u, filePath));
 
@@ -77,7 +81,12 @@ export async function getCode(codeStr, options = {}) {
 		}
 	}
 
-	let result = await preprocess(codeStr, { globals, features, imports, resolved, ast });
+	// exports are returned as globals
+	if(compileAsFunction) {
+		implicitExports = false;
+	}
+
+	let result = await preprocess(codeStr, { globals, features, imports, used, resolved, ast, compileAsFunction });
 	if(typeof result === "string") {
 		codeStr = result;
 	}

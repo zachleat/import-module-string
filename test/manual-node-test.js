@@ -57,3 +57,18 @@ test("import from local script with import npm package", async t => {
 	assert.equal(typeof res.noop, "function");
 });
 
+test("Use compileAsFunction to return function wrapper (with an import)", async t => {
+	let mod = await importFromString(`import {num} from './test/dependency-with-import.js';
+export { num };
+export const ret = fn();`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({
+		fn: function() { return 1 }
+	});
+
+	assert.equal(res.num, 2);
+	assert.equal(res.ret, 1);
+});
