@@ -89,3 +89,14 @@ export function getNoop() {
 	assert.equal(typeof res.getNoop, "function");
 	assert.equal(res.getNoop(), "undefined1");
 });
+
+test("Use compileAsFunction with data", async t => {
+	let mod = await importFromString(`export const b = myVar;`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({ myVar: 999 });
+
+	assert.equal(res.b, 999);
+});
