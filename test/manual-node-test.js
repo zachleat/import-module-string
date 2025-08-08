@@ -72,3 +72,20 @@ export const ret = fn();`, {
 	assert.equal(res.num, 2);
 	assert.equal(res.ret, 1);
 });
+
+test("Use compileAsFunction to return function wrapper (with a package import)", async t => {
+	let mod = await importFromString(`import { noopSync } from '@zachleat/noop';
+
+export function getNoop() {
+	// important to use the import here
+	return noopSync() + "1";
+};`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default();
+
+	assert.equal(typeof res.getNoop, "function");
+	assert.equal(res.getNoop(), "undefined1");
+});
