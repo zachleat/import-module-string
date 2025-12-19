@@ -20,7 +20,6 @@ export function resolveModule(ref) {
 		//   Safari 16.4 vs 16.4
 		//   Firefox 106 vs 108
 
-		// Vitest issue with import.meta.resolve https://github.com/vitest-dev/vitest/issues/6953
 		throw new Error(`\`import.meta.resolve\` is not available.`);
 	}
 
