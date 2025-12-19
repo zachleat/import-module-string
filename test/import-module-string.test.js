@@ -1,6 +1,7 @@
 import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
 import serialize from "serialize-to-js";
+import tsBlankSpace from "ts-blank-space";
 
 import { expectError, isMissingModuleNameErrorMessage } from "./test-utils.js";
 // import { emulateImportMap } from "../src/emulate-importmap.js";
@@ -404,3 +405,14 @@ test("Use compileAsFunction with data", async t => {
 });
 
 // --- end previously: manual-node-tests.js
+
+test("Example using type stripping (via ts-blank-space package)", async () => {
+	let rawCode = `export var a: number = 1;
+export const c: number = 3;
+export var b: number = 2;
+export const d: string = "howdy";`;
+
+	let code = tsBlankSpace(rawCode);
+	let res = await importFromString(code);
+  assert.containsSubset(res, {a: 1, b: 2, c: 3, d: "howdy"});
+});
