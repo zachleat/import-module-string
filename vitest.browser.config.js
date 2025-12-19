@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 import os from "node:os";
 
@@ -13,7 +14,7 @@ export default defineConfig({
       enabled: true,
       headless: true,
       screenshotFailures: false,
-      provider: 'playwright',
+      provider: playwright(),
       // https://vitest.dev/guide/browser/playwright
       instances,
     },

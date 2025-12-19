@@ -2,7 +2,7 @@ import { assert, test } from "vitest"
 import { isPlainObject } from "@11ty/eleventy-utils";
 import serialize from "serialize-to-js";
 
-import { expectError } from "./test-utils.js";
+import { expectError, isMissingModuleNameErrorMessage } from "./test-utils.js";
 // import { emulateImportMap } from "../src/emulate-importmap.js";
 import { importFromString } from "../import-module-string.js"
 
@@ -195,11 +195,9 @@ test.skipIf(!isNodeMode)("import * from node:module (builtin, no export)", async
 	assert.isOk(res.module);
 });
 
-test.skipIf(!isNodeMode)("error: import from npmpackage", async t => {
-	let error = await expectError(async () => {
-		await importFromString("import { noop } from '@zachleat/noop';");
-	});
-	assert.isOk(error.message.startsWith(`Failed to resolve module specifier "@zachleat/noop"`) || error.message === "Invalid URL", error.message);
+test.skipIf(!isNodeMode)("import from npmpackage (inlined)", async t => {
+	let res = await importFromString("import { noop } from '@zachleat/noop';");
+	assert.typeOf(res.noop, "function");
 });
 
 test.skipIf(!isNodeMode)("require(builtin)", async t => {
@@ -287,11 +285,11 @@ test.skipIf(isNodeMode)("import from local script (inline) with import local scr
 	assert.equal(res.num, 2);
 });
 
-// Tests that import from npm packages *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
-// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
-test.skip("import from npmpackage (inlined)", async t => { /* .skipIf(!isNodeMode) */
-	let res = await importFromString("import { noop } from '@zachleat/noop';");
-	assert.typeOf(res.noop, "number");
+test.skipIf(isNodeMode)("expect error in browser: import from npmpackage", async t => {
+	let error = await expectError(async () => {
+		let res = await importFromString("import { noop } from '@zachleat/noop';");
+	});
+	assert.isOk(isMissingModuleNameErrorMessage("@zachleat/noop", error.message), error.message);
 });
 
 test("Use compileAsFunction to return function wrapper", async t => {

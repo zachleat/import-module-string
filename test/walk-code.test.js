@@ -1,7 +1,7 @@
 import { assert, test } from "vitest"
-import { expectError } from "./test-utils.js";
 
 import { importFromString, walkCode, parseCode } from "../import-module-string.js"
+import { isMissingModuleErrorMessage } from "./test-utils.js";
 
 const isNodeMode = typeof process !== "undefined" && process?.env?.NODE;
 
@@ -35,17 +35,12 @@ test("Walk, then import", async t => {
 		try {
 			await importFromString(code, { ast });
 		} catch(e) {
-			let messages = [
-				"Failed to fetch dynamically imported module:", // Chrome
-				"error loading dynamically imported module:", // Firefox
-				"Importing a module script failed.", // Safari
-			]
-			assert.isOk(messages.find(msg => e.message.startsWith(msg)), e.message);
+			assert.isOk(isMissingModuleErrorMessage(e.message), e.message);
 		}
 	}
 });
 
-test.skipIf(!isNodeMode)("Walk, then import a non-built-in", async t => {
+test.skipIf(!isNodeMode)("(Node only) Walk, then import a non-built-in", async t => {
 	const { isBuiltin } = await import("node:module");
 
 	let code = `import { noop } from '@zachleat/noop';`;
@@ -60,10 +55,7 @@ test.skipIf(!isNodeMode)("Walk, then import a non-built-in", async t => {
 		// throw new Error("Cannot import non-built-in modules via import-module-string: " + nonBuiltinImports.join(", "))
 	}
 
-	let error = await expectError(async () => {
-		await importFromString(code, { ast });
-	});
-
-	assert.isOk(error.message.startsWith("Failed to resolve module specifier") || error.message === "Invalid URL", error.message);
+	let res = await importFromString("import { noop } from '@zachleat/noop';", { ast });
+	assert.typeOf(res.noop, "function");
 });
 
