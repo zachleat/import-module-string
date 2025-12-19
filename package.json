@@ -5,10 +5,9 @@
   "main": "import-module-string.js",
   "scripts": {
     "test:browser": "vitest --config vitest.browser.config.js",
-    "test:node-manual": "node --test test/manual-node-test.js",
     "test:node": "vitest --environment=node",
     "test:deno-cli": "echo '** Manual test for Deno is temporary until Vitest runs in Deno **\n' && deno test/manual-deno-test-cli.js",
-    "test": "npm run test:node-manual && CI=true npm run test:node && CI=true npm run test:browser",
+    "test": "CI=true npm run test:node && CI=true npm run test:browser",
     "demo": "npx http-server ."
   },
   "type": "module",

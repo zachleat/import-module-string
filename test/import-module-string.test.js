@@ -156,7 +156,7 @@ test("import.meta.url (filePath override)", async t => {
  * Node-only tests
  */
 
-test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url used in createRequire (with filePath)", async t => {
+test.skipIf(!isNodeMode || process.version.startsWith("v18."))("(Node 20+ only) import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
 		addRequire: true,
 		filePath: import.meta.url,
@@ -165,42 +165,42 @@ test.skipIf(!isNodeMode || process.version.startsWith("v18."))("import.meta.url 
 	assert.typeOf(res.dep, "number");
 });
 
-test.skipIf(!isNodeMode)("import from node:fs (builtin)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import from node:fs (builtin)", async t => {
 	let res = await importFromString("import fs from 'node:fs'; export { fs };");
 	assert.isOk(res.fs);
 });
 
-test.skipIf(!isNodeMode)("import from node:fs (builtin, no export)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import from node:fs (builtin, no export)", async t => {
 	let res = await importFromString("import fs from 'node:fs';");
 	assert.isOk(res.fs);
 });
 
-test.skipIf(!isNodeMode)("import from node:module (builtin)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import from node:module (builtin)", async t => {
 	let res = await importFromString("import module from 'node:module'; export { module };");
 	assert.isOk(res.module);
 });
 
-test.skipIf(!isNodeMode)("import from node:module (builtin, no export)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import from node:module (builtin, no export)", async t => {
 	let res = await importFromString("import module from 'node:module';");
 	assert.isOk(res.module);
 });
 
-test.skipIf(!isNodeMode)("import * from node:module (builtin)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import * from node:module (builtin)", async t => {
 	let res = await importFromString("import * as module from 'node:module'; export { module }");
 	assert.isOk(res.module);
 });
 
-test.skipIf(!isNodeMode)("import * from node:module (builtin, no export)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import * from node:module (builtin, no export)", async t => {
 	let res = await importFromString("import * as module from 'node:module';");
 	assert.isOk(res.module);
 });
 
-test.skipIf(!isNodeMode)("import from npmpackage (inlined)", async t => {
+test.skipIf(!isNodeMode)("(Node only) import from npmpackage (inlined)", async t => {
 	let res = await importFromString("import { noop } from '@zachleat/noop';");
 	assert.typeOf(res.noop, "function");
 });
 
-test.skipIf(!isNodeMode)("require(builtin)", async t => {
+test.skipIf(!isNodeMode)("(Node only) require(builtin)", async t => {
 	let res = await importFromString("const fs = require('node:fs'); export { fs };", {
 		addRequire: true
 	});
@@ -208,7 +208,7 @@ test.skipIf(!isNodeMode)("require(builtin)", async t => {
 	assert.isNotOk(res.require);
 });
 
-test.skipIf(!isNodeMode)("require(builtin), no export", async t => {
+test.skipIf(!isNodeMode)("(Node only) require(builtin), no export", async t => {
 	let res = await importFromString("const fs = require('node:fs');", {
 		addRequire: true
 	});
@@ -216,7 +216,7 @@ test.skipIf(!isNodeMode)("require(builtin), no export", async t => {
 	assert.isNotOk(res.require);
 });
 
-test.skipIf(!isNodeMode)("error: require(npm package)", async t => {
+test.skipIf(!isNodeMode)("(Node only) error: require(npm package)", async t => {
 	let error = await expectError(async () => {
 		await importFromString("const { noop } = require('@zachleat/noop'); export { noop };", {
 			addRequire: true
@@ -225,7 +225,7 @@ test.skipIf(!isNodeMode)("error: require(npm package)", async t => {
 	assert.isOk(error.message.startsWith("Cannot find module '@zachleat/noop'"), error.message);
 });
 
-test.skipIf(!isNodeMode)("error: require(npm package), no export", async t => {
+test.skipIf(!isNodeMode)("(Node only) error: require(npm package), no export", async t => {
 	let error = await expectError(async () => {
 		await importFromString("const { noop } = require('@zachleat/noop');", {
 			addRequire: true
@@ -234,12 +234,12 @@ test.skipIf(!isNodeMode)("error: require(npm package), no export", async t => {
 	assert.isOk(error.message.startsWith("Cannot find module '@zachleat/noop'"), error.message);
 });
 
-test.skipIf(!isNodeMode)("dynamic import(builtin)", async t => {
+test.skipIf(!isNodeMode)("(Node only) dynamic import(builtin)", async t => {
 	let res = await importFromString(`const { default: fs } = await import("node:fs");`);
 	assert.isOk(res.fs);
 });
 
-test.skipIf(!isNodeMode)("error: dynamic import(npm package)", async t => {
+test.skipIf(!isNodeMode)("(Node only) error: dynamic import(npm package)", async t => {
 	let error = await expectError(async () => {
 		await importFromString(`const { noop } = await import("@zachleat/noop");`);
 	});
@@ -269,23 +269,20 @@ import dep2 from './test/dep2.js';`, {
 	assert.equal(res.dep2, 2);
 });
 
-// Tests that import from relative references *WORK* but are not supported in Node + Vitest https://github.com/vitest-dev/vitest/issues/6953
-// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
-test.skipIf(isNodeMode)("import from local script (inline)", async t => {
+test("import from local script (inline)", async t => {
 	let res = await importFromString("import dep from './test/dependency.js';");
 
 	assert.typeOf(res.dep, "number");
+	assert.equal(res.dep, 2);
 });
 
-// Tests that import from relative references *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
-// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
-test.skipIf(isNodeMode)("import from local script (inline) with import local script", async t => {
+test("import from local script (inline) with import local script", async t => {
 	let res = await importFromString("import {num} from './test/dependency-with-import.js';");
 
 	assert.equal(res.num, 2);
 });
 
-test.skipIf(isNodeMode)("expect error in browser: import from npmpackage", async t => {
+test.skipIf(isNodeMode)("(Browser only) expect error: import from npmpackage", async t => {
 	let error = await expectError(async () => {
 		let res = await importFromString("import { noop } from '@zachleat/noop';");
 	});
@@ -306,9 +303,7 @@ test("Use compileAsFunction to return function wrapper", async t => {
 	assert.equal(res.ret, 1);
 });
 
-// Tests that import from npm packages *WORK* but are not supported in Vitest https://github.com/vitest-dev/vitest/issues/6953
-// We run these tests separately using Node’s Test Runner: see test/manual-node-test.js
-test.skipIf(isNodeMode)("Use compileAsFunction to return function wrapper (with an import)", async t => {
+test("Use compileAsFunction to return function wrapper (with an import)", async t => {
 	let mod = await importFromString(`import {num} from './test/dependency-with-import.js';
 export { num };
 export const ret = fn();`, {
@@ -325,3 +320,87 @@ export const ret = fn();`, {
 	assert.typeOf(res.ret, "number");
 	assert.equal(res.ret, 1);
 });
+
+// --- previously: manual-node-tests.js
+
+test("import from local script with import (inline), sanity check on importing data uris", async t => {
+	let res = await importFromString(`import num from "data:text/javascript;charset=utf-8,export%20default%202%3B";`, {
+	});
+	assert.equal(res.num, 2);
+});
+
+test("import from local script (with file path)", async t => {
+	let res = await importFromString("import num from './dependency.js';", {
+		filePath: "./test/DOES_NOT_EXIST.js",
+	});
+
+	assert.equal(res.num, 2);
+});
+
+test("import from local script with import local script (with file path)", async t => {
+	let res = await importFromString("import {num} from './dependency-with-import.js';", {
+		filePath: "./test/DOES_NOT_EXIST.js",
+	});
+
+	assert.equal(res.num, 2);
+});
+
+test.skipIf(!isNodeMode)("(Node only) import from local script with import npm package", async t => {
+	let res = await importFromString("import {noop} from './test/dependency-with-import-npm.js';");
+
+	assert.equal(typeof res.noop, "function");
+});
+
+test.skipIf(!isNodeMode)("(Node only) import from local script with import npm package", async t => {
+	let res = await importFromString("import {noop} from './dependency-with-import-npm.js';", {
+		filePath: "./test/DOES_NOT_EXIST.js",
+	});
+
+	assert.equal(typeof res.noop, "function");
+});
+
+test("Use compileAsFunction to return function wrapper (with an import)", async t => {
+	let mod = await importFromString(`import {num} from './test/dependency-with-import.js';
+export { num };
+export const ret = fn();`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({
+		fn: function() { return 1 }
+	});
+
+	assert.equal(res.num, 2);
+	assert.equal(res.ret, 1);
+});
+
+test.skipIf(!isNodeMode)("(Node only) Use compileAsFunction to return function wrapper (with a package import)", async t => {
+	let mod = await importFromString(`import { noopSync } from '@zachleat/noop';
+
+export function getNoop() {
+	// important to use the import here
+	return noopSync() + "1";
+};`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default();
+
+	assert.equal(typeof res.getNoop, "function");
+	assert.equal(res.getNoop(), "undefined1");
+});
+
+test("Use compileAsFunction with data", async t => {
+	let mod = await importFromString(`export const b = myVar;`, {
+		compileAsFunction: true,
+	});
+
+	// This avoids data serialization altogether and brings the code back into your current scope
+	let res = await mod.default({ myVar: 999 });
+
+	assert.equal(res.b, 999);
+});
+
+// --- end previously: manual-node-tests.js
