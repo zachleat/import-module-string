@@ -157,7 +157,7 @@ test("import.meta.url (filePath override)", async t => {
  * Node-only tests
  */
 
-test.skipIf(!isNodeMode || process.version.startsWith("v18."))("(Node 20+ only) import.meta.url used in createRequire (with filePath)", async t => {
+test.skipIf(!isNodeMode)("(Node 20+ only) import.meta.url used in createRequire (with filePath)", async t => {
 	let res = await importFromString("const { default: dep } = require('../test/dependency.js');", {
 		addRequire: true,
 		filePath: import.meta.url,
@@ -413,6 +413,18 @@ export var b: number = 2;
 export const d: string = "howdy";`;
 
 	let code = tsBlankSpace(rawCode);
+	let res = await importFromString(code);
+  assert.containsSubset(res, {a: 1, b: 2, c: 3, d: "howdy"});
+});
+
+test.skipIf(!isNodeMode || process.version.startsWith("v20."))("(Node 22+ only) Example using type stripping (via Node builtin)", async () => {
+	const { stripTypeScriptTypes } = await import("node:module");
+	let rawCode = `export var a: number = 1;
+export const c: number = 3;
+export var b: number = 2;
+export const d: string = "howdy";`;
+
+	let code = stripTypeScriptTypes(rawCode);
 	let res = await importFromString(code);
   assert.containsSubset(res, {a: 1, b: 2, c: 3, d: "howdy"});
 });
