@@ -17,11 +17,63 @@ import * as walk from "acorn-walk";
  */
 
 /**
+ * Adds binding names from a declaration pattern (including destructuring) to `names`.
+ * @param {import("acorn").Pattern | null | undefined} node
+ * @param {Set<string>} names
+ */
+function addPatternNames(node, names) {
+	if(!node) {
+		return;
+	}
+
+	if(node.type === "Identifier") {
+		names.add(node.name);
+	} else if(node.type === "AssignmentPattern") {
+		addPatternNames(node.left, names);
+	} else if(node.type === "RestElement") {
+		addPatternNames(node.argument, names);
+	} else if(node.type === "ObjectPattern") {
+		for(let prop of node.properties) {
+			addPatternNames(prop.type === "Property" ? prop.value : prop, names);
+		}
+	} else if(node.type === "ArrayPattern") {
+		for(let element of node.elements) {
+			addPatternNames(element, names);
+		}
+	}
+}
+
+/**
+ * Module-scope bindings only; `var` hoisted out of nested top-level blocks (e.g. `if(x) { var y }`) is not included.
+ * @param {import("acorn").Program} ast
+ * @returns {Set<string>}
+ */
+function getTopLevelDeclarations(ast) {
+	let names = new Set();
+	for(let node of ast.body) {
+		if(node.type === "VariableDeclaration") {
+			for(let declarator of node.declarations) {
+				addPatternNames(declarator.id, names);
+			}
+		} else if((node.type === "FunctionDeclaration" || node.type === "ClassDeclaration") && node.id) {
+			names.add(node.id.name);
+		} else if(node.type === "ImportDeclaration") {
+			for(let specifier of node.specifiers) {
+				names.add(specifier.local.name);
+			}
+		}
+	}
+	return names;
+}
+
+/**
  * @param {import("acorn").Program} ast
  * @returns {WalkResult}
  */
 export function walkCode(ast) {
-	let globals = new Set();
+	let globals = getTopLevelDeclarations(ast);
+	// Declarations at any depth, excluded from `used`
+	let declared = new Set();
 	let imports = new Set();
 	let references = new Set();
 
@@ -51,47 +103,21 @@ export function walkCode(ast) {
 				references.add(node.callee.name);
 			}
 		},
-		// e.g. var b = function() {}
-		// FunctionExpression is already handled by VariableDeclarator
-		// FunctionExpression(node) {},
 		FunctionDeclaration(node) {
 			if(node?.id?.name) {
-				globals.add(node.id.name);
+				declared.add(node.id.name);
+			}
+		},
+		ClassDeclaration(node) {
+			if(node?.id?.name) {
+				declared.add(node.id.name);
 			}
 		},
 		VariableDeclarator(node) {
-			// destructuring assignment Array
-			if(node?.id?.type === "ArrayPattern") {
-				for(let prop of node.id.elements) {
-					if(prop?.type === "Identifier") {
-						globals.add(prop.name);
-					}
-				}
-			} else if(node?.id?.type === "ObjectPattern") {
-				// destructuring assignment Object
-				for(let prop of node.id.properties) {
-					if(prop?.type === "Property") {
-						globals.add(prop.value.name);
-					}
-				}
-			} else if(node?.id?.name) {
-				globals.add(node.id.name);
-			}
-		},
-		// if imports aren’t being transformed to variables assignment, we need those too
-		ImportSpecifier(node) {
-			// `name` in `import { name } from 'package'`
-			globals.add(node.imported.name);
+			addPatternNames(node.id, declared);
 		},
 		ImportDeclaration(node) {
 			imports.add(node.source.value);
-		},
-		ImportDefaultSpecifier(node) {
-			// `name` in `import name from 'package'`
-			globals.add(node.local.name);
-		},
-		ImportNamespaceSpecifier(node) {
-			globals.add(node.local.name);
 		},
 		ExportSpecifier(node) {
 			features.export = true;
@@ -107,7 +133,7 @@ export function walkCode(ast) {
 	walk.simple(ast, types);
 
 	// remove declarations from used
-	for(let name of globals) {
+	for(let name of [...globals, ...declared]) {
 		references.delete(name);
 	}
 
