@@ -56,18 +56,18 @@
   "license": "MIT",
   "devDependencies": {
     "@11ty/eleventy-utils": "^2.0.7",
-    "@vitest/browser": "^4.1.1",
-    "@vitest/browser-playwright": "^4.1.1",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
     "@zachleat/noop": "^1.0.7",
     "http-server": "^14.1.1",
-    "playwright": "^1.58.2",
+    "playwright": "^1.63.0",
     "serialize-to-js": "^3.1.2",
-    "ts-blank-space": "^0.7.0",
+    "ts-blank-space": "^0.9.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "acorn": "^8.16.0",
+    "acorn": "^8.18.0",
     "acorn-walk": "^8.3.5",
     "esm-import-transformer": "^3.0.5"
   }
