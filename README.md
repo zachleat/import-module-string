@@ -134,6 +134,7 @@ As a side note, you _can_ shim `fs` into the browser with [`memfs`](https://gith
 
 ## Changelog
 
+- `v3.0.0` bump Node support minimum to 22.18+
 - `v2.0.0` removes `adapter` (no longer necessary!)
 - `v1.0.5` bug fixes
 - `v1.0.4` add `adapter` option (add `adapter: "fs"` or `adapter: "fetch"`) to resolve imports in various environments.
