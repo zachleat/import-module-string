@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"outDir": "./types",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"target": "es2022",
+		"lib": ["es2022", "dom"],
+		"skipLibCheck": true
+	},
+	"include": ["import-module-string.js", "src/**/*.js"]
+}

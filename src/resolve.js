@@ -58,16 +58,39 @@ function resolveLocalPaths(ref, root) {
 	return pathname;
 }
 
+/** @typedef {"data" | "absolute" | "relative" | "bare"} ModuleReferenceMode */
+
+/**
+ * @typedef {object} ModuleReference
+ * @property {string} path
+ * @property {ModuleReferenceMode} mode
+ */
+
+/**
+ * @typedef {object} ModuleInfo
+ * @property {string} name
+ * @property {ModuleReferenceMode} mode
+ * @property {ModuleReference} original The specifier exactly as authored.
+ * @property {string} path
+ * @property {boolean} isMetaResolved
+ * @property {string} [target] Set when `resolveImportContent` supplied inlined content for this import.
+ */
+
+/**
+ * @param {string} name
+ * @param {string} [root] Base used to resolve relative specifiers.
+ * @returns {ModuleInfo}
+ */
 export function getModuleInfo(name, root) {
 	let mode = getModuleReferenceMode(name);
-	let info = {
+	let info = /** @type {ModuleInfo} */({
 		name,
 		mode,
 		original: {
 			path: name,
 			mode,
 		}
-	};
+	});
 
 	if(mode === "relative" && root) {
 		// resolve relative paths to the virtual or real file path of the script

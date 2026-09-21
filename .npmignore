@@ -1,6 +1,0 @@
-node_modules/
-test/
-vitest.*
-deno.lock
-demo.html
-.github

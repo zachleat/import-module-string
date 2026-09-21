@@ -1,5 +1,25 @@
 import * as walk from "acorn-walk";
 
+/**
+ * @typedef {object} CodeFeatures
+ * @property {boolean} export Code declares its own `export`.
+ * @property {boolean} require Code calls `require()`.
+ * @property {boolean} importMetaUrl Code references `import.meta.url`.
+ */
+
+/**
+ * @typedef {object} WalkResult
+ * @property {import("acorn").Program} ast
+ * @property {Set<string>} globals Top-level declarations, implicitly exported unless the code uses `export`.
+ * @property {Set<string>} imports Import specifiers, as authored.
+ * @property {CodeFeatures} features
+ * @property {Set<string>} used Referenced identifiers that are neither declared locally nor on `globalThis`.
+ */
+
+/**
+ * @param {import("acorn").Program} ast
+ * @returns {WalkResult}
+ */
 export function walkCode(ast) {
 	let globals = new Set();
 	let imports = new Set();

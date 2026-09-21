@@ -12,7 +12,7 @@ npm install import-module-string
 
 ## Features
 
-- Multi-runtime: tested with Node (18+), Deno (limited), Chromium, Firefox, and WebKit.
+- Multi-runtime: tested with Node (22.18+), Deno (limited), Chromium, Firefox, and WebKit.
 - Defers to `export` when used, otherwise implicitly `export` all globals (via `var`, `let`, `const`, `function`, `Array` or `Object` destructuring assignment, `import` specifiers, etc)
 - Supports top-level async/await (as expected for ES modules)
 - Emulates `import.meta.url` when `filePath` option is supplied
@@ -43,6 +43,17 @@ import { importFromString } from "import-module-string";
 ```
 
 View the [test suite file](https://github.com/zachleat/import-module-string/blob/main/test/import-module-string.test.js) for more examples.
+
+### TypeScript
+
+Type declarations are included. Pass a type argument to describe the returned exports:
+
+```ts
+import { importFromString, type ImportFromStringOptions } from "import-module-string";
+
+const options: ImportFromStringOptions = { data: { b: 2 } };
+const { a } = await importFromString<{ a: number }>("const a = b;", options);
+```
 
 ### Export
 

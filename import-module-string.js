@@ -8,6 +8,11 @@ import { preprocess } from "./src/preprocess-imports.js";
 export { parseCode, walkCode, getTarget, getTargetDataUri, getModuleInfo };
 
 // Keep this function in root (not `src/resolve.js`) to maintain for-free root relative import.meta.url
+/**
+ * Resolves a specifier via `import.meta.resolve`. Throws when it is unavailable.
+ * @param {string} ref
+ * @returns {string}
+ */
 export function resolveModule(ref) {
 	// Supported in Node v20.6.0+, v18.19.0+, Chrome 105, Safari 16.4, Firefox 106
 	if(!("resolve" in import.meta)) {
@@ -30,6 +35,32 @@ export function resolveModule(ref) {
 	return import.meta.resolve(ref);
 }
 
+/**
+ * @typedef {object} ResolveImportContentArgument
+ * @property {string} path
+ * @property {import("./src/resolve.js").ModuleReferenceMode} mode
+ * @property {string} [resolved] Present only when `import.meta.resolve` resolved the specifier.
+ */
+
+/**
+ * @typedef {object} ImportFromStringOptions
+ * @property {Record<string, unknown>} [data] Values exposed to the code as top-level `const` declarations. Must be JSON.stringify friendly unless `serializeData` is supplied.
+ * @property {string} [filePath] Base for resolving relative imports, and the value used for `import.meta.url`.
+ * @property {boolean} [implicitExports] Add `export` for all globals when the code has no `export` of its own. Defaults to `true`.
+ * @property {boolean} [addRequire] Add a `require()` polyfill via `node:module`. Node only. Defaults to `false`.
+ * @property {(moduleInfo: ResolveImportContentArgument) => string | undefined | Promise<string | undefined>} [resolveImportContent] Supply import content yourself instead of letting the runtime fetch it. Return a falsy value to fall through to normal resolution.
+ * @property {(data: Record<string, unknown>) => string | Promise<string>} [serializeData] Replace the default JSON serialization of `data`.
+ * @property {boolean} [compileAsFunction] Wrap the code in a default-exported function taking the undeclared identifiers as a destructured argument, rather than executing it. Throws if the code uses `export default`. Defaults to `false`.
+ * @property {import("acorn").Program} [ast] Reuse an already-parsed AST.
+ * @property {Partial<import("acorn").Options>} [acornOptions] Passed through to `acorn.parse`.
+ */
+
+/**
+ * Returns the transformed source that `importFromString` would execute.
+ * @param {string} codeStr
+ * @param {ImportFromStringOptions} [options]
+ * @returns {Promise<string>}
+ */
 export async function getCode(codeStr, options = {}) {
 	let { ast, acornOptions, data, filePath, implicitExports, addRequire, resolveImportContent, serializeData: stringifyDataOptionCallback, compileAsFunction } = Object.assign({
 		data: {},
@@ -115,6 +146,13 @@ export async function getCode(codeStr, options = {}) {
 };
 
 // Thanks https://stackoverflow.com/questions/57121467/import-a-module-from-string-variable
+/**
+ * Executes `codeStr` as an ES module and resolves with its module namespace.
+ * @template {Record<string, any>} [T=Record<string, any>]
+ * @param {string} codeStr
+ * @param {ImportFromStringOptions} [options]
+ * @returns {Promise<T>}
+ */
 export async function importFromString(codeStr, options = {}) {
 	let code = await getCode(codeStr, options);
 	let target = await getTarget(code);
