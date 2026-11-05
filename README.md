@@ -146,7 +146,7 @@ As a side note, you _can_ shim `fs` into the browser with [`memfs`](https://gith
 
 ## Changelog
 
-- `v4.0.0` `compileAsFunction` returns an `async` function (supports top-level `await`) and respects `implicitExports` when the code has no `export`
+- `v4.0.0` `compileAsFunction` returns an `async` function (supports top-level `await`) and respects `implicitExports` when the code has no `export`. Adds support for `export` aliases, `export … from` and `export *` ([#3](https://github.com/zachleat/import-module-string/issues/3)).
 - `v3.0.0` bump Node support minimum to 22.18+
 - `v2.0.0` removes `adapter` (no longer necessary!)
 - `v1.0.5` bug fixes

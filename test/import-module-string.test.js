@@ -404,6 +404,52 @@ test("Use compileAsFunction with data", async t => {
 	assert.equal(res.b, 999);
 });
 
+test("Re-export with alias (relative)", async t => {
+	let res = await importFromString(`export { default as alwaysBlue } from "./test/dependency.js";`);
+
+	assert.equal(res.alwaysBlue, 2);
+});
+
+test("Use compileAsFunction with re-export alias (issue #3)", async t => {
+	let mod = await importFromString(`export { default as alwaysBlue } from "./test/dependency.js";
+export { num as n } from "./test/dependency-with-import.js";
+export * as ns from "./test/dependency-with-import.js";`, {
+		compileAsFunction: true,
+	});
+
+	let res = await mod.default();
+
+	assert.equal(res.alwaysBlue, 2);
+	assert.equal(res.n, 2);
+	assert.equal(res.ns.num, 2);
+});
+
+test("Export star (relative)", async t => {
+	let res = await importFromString(`export * from "./test/dependency-with-import.js";`);
+
+	assert.equal(res.num, 2);
+});
+
+test("Use compileAsFunction with export star", async t => {
+	let mod = await importFromString(`export * from "./test/dependency-with-import.js";
+export * from "./test/dependency.js";
+export const num = 3;`, {
+		compileAsFunction: true,
+	});
+
+	// `default` is never re-exported and explicit exports win.
+	assert.deepEqual(await mod.default(), { num: 3 });
+});
+
+test("Use compileAsFunction with local export alias", async t => {
+	let mod = await importFromString(`const a = 1;
+export { a as b };`, {
+		compileAsFunction: true,
+	});
+
+	assert.deepEqual(await mod.default(), { b: 1 });
+});
+
 test("Use compileAsFunction with top-level await", async t => {
 	let mod = await importFromString(`export const a = await Promise.resolve(myVar);`, {
 		compileAsFunction: true,

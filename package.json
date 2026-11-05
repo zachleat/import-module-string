@@ -67,6 +67,6 @@
   "dependencies": {
     "acorn": "^8.19.0",
     "acorn-walk": "^8.3.5",
-    "esm-import-transformer": "^3.0.5"
+    "esm-import-transformer": "^4.0.0"
   }
 }

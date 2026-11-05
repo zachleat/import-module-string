@@ -124,9 +124,17 @@ export function walkCode(ast) {
 		},
 		ExportNamedDeclaration(node) {
 			features.export = true;
+			if(node.source) {
+				imports.add(node.source.value);
+			}
 		},
 		ExportAllDeclaration(node) {
 			features.export = true;
+			imports.add(node.source.value);
+			// `export * as ns` binds no local, but its Identifier is still walked.
+			if(node.exported?.name) {
+				declared.add(node.exported.name);
+			}
 		}
 	};
 

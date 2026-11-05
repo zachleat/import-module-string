@@ -21,6 +21,15 @@ class TransformerManager {
 	}
 }
 
+function getReturnString(bindings, stars = []) {
+	// `export *` never re-exports `default`, and explicit exports win, so stars spread first.
+	let entries = Array.from(stars, local => `...(({ default: _, ...rest }) => rest)(${local})`);
+	for(let [exported, local] of bindings) {
+		entries.push(exported === local ? exported : `${exported}: ${local}`);
+	}
+	return `{ ${entries.join(", ")} }`;
+}
+
 function getArgumentString(names) {
 	let argString = "";
 	if(!Array.isArray(names)) {
@@ -62,8 +71,8 @@ export async function preprocess(codeStr, { resolved, ast, used, globals, featur
 		if(compileAsFunction) {
 			let transformer = transformerManager.getTransformer(code);
 			let stripped = transformer.transformRemoveImportExports();
-			let { imports, namedExports } = transformer.getImportsAndExports();
-			let returned = implicitExports && !features?.export ? globals : namedExports;
+			let { imports, namedExports, exportBindings, exportStars } = transformer.getImportsAndExports();
+			let returned = implicitExports && !features?.export ? new Map(Array.from(globals, name => [name, name])) : exportBindings;
 
 			// TODO we could just use the unprocessed code here if we detect a default export?
 			if(namedExports.has("default")) {
@@ -79,7 +88,7 @@ export default async function(${getArgumentString(used)}) {
 ${stripped}
 
 	// Returns named exports:
-	return ${getArgumentString(returned) || '{}'}
+	return ${getReturnString(returned, exportStars)}
 };`;
 		}
 
