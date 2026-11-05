@@ -34,7 +34,7 @@ function getArgumentString(names) {
 	return argString;
 }
 
-export async function preprocess(codeStr, { resolved, ast, used, compileAsFunction }) {
+export async function preprocess(codeStr, { resolved, ast, used, globals, features, compileAsFunction, implicitExports }) {
 	let importMap = {
 		imports: {}
 	};
@@ -63,6 +63,7 @@ export async function preprocess(codeStr, { resolved, ast, used, compileAsFuncti
 			let transformer = transformerManager.getTransformer(code);
 			let stripped = transformer.transformRemoveImportExports();
 			let { imports, namedExports } = transformer.getImportsAndExports();
+			let returned = implicitExports && !features?.export ? globals : namedExports;
 
 			// TODO we could just use the unprocessed code here if we detect a default export?
 			if(namedExports.has("default")) {
@@ -74,11 +75,11 @@ export async function preprocess(codeStr, { resolved, ast, used, compileAsFuncti
 ${Array.from(imports).join("\n") || "// No imports found"}
 
 // Wrapper function:
-export default function(${getArgumentString(used)}) {
+export default async function(${getArgumentString(used)}) {
 ${stripped}
 
 	// Returns named exports:
-	return ${getArgumentString(namedExports) || '{}'}
+	return ${getArgumentString(returned) || '{}'}
 };`;
 		}
 

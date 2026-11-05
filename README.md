@@ -97,6 +97,18 @@ await importFromString("const a = import.meta.url;", { filePath: import.meta.url
 { a: `file:///…` }
 ```
 
+### Compile as a function
+
+`compileAsFunction` returns a default-exported async function instead of executing the code, so you can pass live values (functions, class instances) without serialization. Undeclared identifiers become its arguments and it resolves with the exports (or implicit exports), so names the code declares itself always win.
+
+```js
+let mod = await importFromString("const a = await fn(b);", { compileAsFunction: true });
+await mod.default({ fn: async n => n * 2, b: 2 });
+
+// Returns
+{ a: 4 }
+```
+
 ### Imports (experimental feature)
 
 #### Relative references

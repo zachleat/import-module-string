@@ -404,6 +404,69 @@ test("Use compileAsFunction with data", async t => {
 	assert.equal(res.b, 999);
 });
 
+test("Use compileAsFunction with top-level await", async t => {
+	let mod = await importFromString(`export const a = await Promise.resolve(myVar);`, {
+		compileAsFunction: true,
+	});
+
+	let res = await mod.default({ myVar: 3 });
+
+	assert.equal(res.a, 3);
+});
+
+test("Use compileAsFunction with implicit exports", async t => {
+	let mod = await importFromString(`import {num} from './test/dependency-with-import.js';
+const a = 1;
+function b() { return a + num; }`, {
+		compileAsFunction: true,
+	});
+
+	let res = await mod.default();
+
+	assert.equal(res.a, 1);
+	assert.equal(res.num, 2);
+	assert.equal(res.b(), 3);
+});
+
+test("Use compileAsFunction with implicitExports: false", async t => {
+	let mod = await importFromString(`const a = 1;`, {
+		compileAsFunction: true,
+		implicitExports: false,
+	});
+
+	assert.deepEqual(await mod.default(), {});
+});
+
+test("Use compileAsFunction with an injected function", async t => {
+	let mod = await importFromString(`const title = query("h1").textContent + page.url;`, {
+		compileAsFunction: true,
+	});
+
+	let calls = [];
+	let res = await mod.default({
+		page: { url: "/" },
+		query(selector) {
+			calls.push(selector);
+			return { textContent: "Hello" };
+		},
+	});
+
+	assert.deepEqual(calls, ["h1"]);
+	assert.equal(res.title, "Hello/");
+});
+
+test("Use compileAsFunction with a declared name shadowing an argument", async t => {
+	let mod = await importFromString(`const page = { url: "/declared/" };
+const url = page.url;`, {
+		compileAsFunction: true,
+	});
+
+	let res = await mod.default({ page: { url: "/argument/" } });
+
+	assert.equal(res.page.url, "/declared/");
+	assert.equal(res.url, "/declared/");
+});
+
 // --- end previously: manual-node-tests.js
 
 test("Example using type stripping (via ts-blank-space package)", async () => {

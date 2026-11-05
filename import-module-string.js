@@ -50,7 +50,7 @@ export function resolveModule(ref) {
  * @property {boolean} [addRequire] Add a `require()` polyfill via `node:module`. Node only. Defaults to `false`.
  * @property {(moduleInfo: ResolveImportContentArgument) => string | undefined | Promise<string | undefined>} [resolveImportContent] Supply import content yourself instead of letting the runtime fetch it. Return a falsy value to fall through to normal resolution.
  * @property {(data: Record<string, unknown>) => string | Promise<string>} [serializeData] Replace the default JSON serialization of `data`.
- * @property {boolean} [compileAsFunction] Wrap the code in a default-exported function taking the undeclared identifiers as a destructured argument, rather than executing it. Throws if the code uses `export default`. Defaults to `false`.
+ * @property {boolean} [compileAsFunction] Wrap the code in a default-exported async function taking the undeclared identifiers as a destructured argument, rather than executing it. The function resolves with the named exports (or the top-level declarations, per `implicitExports`). Throws if the code uses `export default`. Defaults to `false`.
  * @property {import("acorn").Program} [ast] Reuse an already-parsed AST.
  * @property {Partial<import("acorn").Options>} [acornOptions] Passed through to `acorn.parse`.
  */
@@ -111,12 +111,12 @@ export async function getCode(codeStr, options = {}) {
 		}
 	}
 
-	// exports are returned as globals
+	let result = await preprocess(codeStr, { globals, features, imports, used, resolved, ast, compileAsFunction, implicitExports });
+
+	// The function wrapper returns exports itself.
 	if(compileAsFunction) {
 		implicitExports = false;
 	}
-
-	let result = await preprocess(codeStr, { globals, features, imports, used, resolved, ast, compileAsFunction });
 	if(typeof result === "string") {
 		codeStr = result;
 	}
